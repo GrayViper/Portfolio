@@ -3,13 +3,15 @@ import * as THREE from 'three';
 import { Volume2, VolumeX, RefreshCw } from 'lucide-react';
 
 /**
- * RetroComputer3D Component - Full-Screen CRT Content & 3D Computer Stage
+ * RetroComputer3D Component - Full 3D Computer Landing Stage (Optimized Viewport Sizing)
  *
  * Features:
- * - Full-screen edge-to-edge content rendered across the 1024x768 CRT monitor face.
- * - Bold, high-contrast operator profile, 2-column cloud architecture matrix, live cluster status ribbon, and interactive shell prompt.
- * - Complete 3D Commodore PET 8296 computer model framed in commanding view.
+ * - Scaled model (0.78x) and tuned camera distance to ensure the entire computer
+ *   (CRT monitor, mechanical keyboard deck, floppy drives, and ground shadow)
+ *   fits comfortably within any desktop or mobile screen height without clipping.
+ * - 1024x768 High-Definition CRT Texture for crystal-clear readability.
  * - 360° mouse drag orbit with momentum and cursor parallax.
+ * - Interactive Amber/Cyan/Green phosphor selector.
  * - Web Audio API synthesized mechanical keyboard clicks.
  */
 export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPortfolio }) {
@@ -80,10 +82,10 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
     // 1. Scene, Camera, Renderer
     const scene = new THREE.Scene();
 
-    const camera = new THREE.PerspectiveCamera(36, width / height, 0.1, 100);
-    // Positioned to prominently showcase the full 3D computer and monitor face
-    const defaultCameraPos = new THREE.Vector3(0, 0.32, 4.65);
-    const scrolledCameraPos = new THREE.Vector3(0, 0.44, 5.6);
+    const camera = new THREE.PerspectiveCamera(37, width / height, 0.1, 100);
+    // Optimized camera distance for prominent, commanding presence within viewport
+    const defaultCameraPos = new THREE.Vector3(0, 0.20, 5.75);
+    const scrolledCameraPos = new THREE.Vector3(0, 0.30, 6.65);
     camera.position.copy(defaultCameraPos);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
@@ -146,6 +148,8 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
 
     // 4. Procedural 3D Commodore PET 8296 Model Group
     const computerGroup = new THREE.Group();
+    // Scaled to 0.82x for a larger, bolder presence that remains within desktop bounds
+    computerGroup.scale.set(0.82, 0.82, 0.82);
     scene.add(computerGroup);
 
     // Contact Ground Shadow
@@ -258,7 +262,7 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
     bezelBackMesh.position.set(0, 0.55, 0.9);
     computerGroup.add(bezelBackMesh);
 
-    // Flat Edge-to-Edge Rectangular Screen Face (100% Full-Screen, zero circular distortion)
+    // Flat Edge-to-Edge Rectangular Screen Face
     const screenGeo = new THREE.PlaneGeometry(2.68, 1.84);
     const screenMesh = new THREE.Mesh(screenGeo, screenMat);
     screenMesh.position.set(0, 0.55, 1.01);
@@ -723,17 +727,28 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
 
     animate();
 
-    // 9. Resize Handler
+    // 9. Resize Handler with Responsive Aspect Ratio Sizing
     const handleResize = () => {
       if (!container) return;
       width = container.clientWidth || window.innerWidth;
       height = container.clientHeight || window.innerHeight;
       camera.aspect = width / height;
+
+      // Ensure model fits comfortably on shorter / ultra-wide screens
+      if (camera.aspect > 1.8) {
+        camera.fov = 38;
+      } else if (camera.aspect < 1.0) {
+        camera.fov = 48; // Mobile portrait
+      } else {
+        camera.fov = 36;
+      }
+
       camera.updateProjectionMatrix();
       renderer.setSize(width, height);
     };
 
     window.addEventListener('resize', handleResize);
+    handleResize(); // Call once on init
 
     return () => {
       container.removeEventListener('mousedown', onMouseDown);
