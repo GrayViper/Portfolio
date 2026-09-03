@@ -3,18 +3,18 @@ import * as THREE from 'three';
 import { Volume2, VolumeX, RefreshCw } from 'lucide-react';
 
 /**
- * RetroComputer3D Component - Full 3D Computer Landing Stage
+ * RetroComputer3D Component - Full-Screen CRT Content & 3D Computer Stage
  *
  * Features:
- * - Edge-to-edge canvas displaying the FULL 3D Commodore PET 8296 Computer on initial page load.
- * - 1024x768 High-Definition CRT Texture for crystal-clear text readability.
- * - 360° mouse drag orbit with physics momentum + subtle cursor parallax.
- * - Interactive Amber/Cyan/Green phosphor selector.
+ * - Full-screen edge-to-edge content rendered across the 1024x768 CRT monitor face.
+ * - Bold, high-contrast operator profile, 2-column cloud architecture matrix, live cluster status ribbon, and interactive shell prompt.
+ * - Complete 3D Commodore PET 8296 computer model framed in commanding view.
+ * - 360° mouse drag orbit with momentum and cursor parallax.
  * - Web Audio API synthesized mechanical keyboard clicks.
  */
 export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPortfolio }) {
   const mountRef = useRef(null);
-  const [crtColor, setCrtColor] = useState('amber'); // 'amber' (edh.dev default) | 'cyan' | 'green' | 'red'
+  const [crtColor, setCrtColor] = useState('amber'); // 'amber' (default) | 'cyan' | 'green' | 'red'
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [shellInput, setShellInput] = useState('');
   const [shellHistory, setShellHistory] = useState([
@@ -81,9 +81,9 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
     const scene = new THREE.Scene();
 
     const camera = new THREE.PerspectiveCamera(36, width / height, 0.1, 100);
-    // Framed to showcase the entire 3D computer (monitor + keyboard + chassis + desk shadow)
-    const defaultCameraPos = new THREE.Vector3(0, 0.38, 5.3);
-    const scrolledCameraPos = new THREE.Vector3(0, 0.48, 6.2);
+    // Positioned to prominently showcase the full 3D computer and monitor face
+    const defaultCameraPos = new THREE.Vector3(0, 0.32, 4.65);
+    const scrolledCameraPos = new THREE.Vector3(0, 0.44, 5.6);
     camera.position.copy(defaultCameraPos);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
@@ -244,7 +244,7 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
     hoodMesh.castShadow = true;
     computerGroup.add(hoodMesh);
 
-    // Ventilation Slits
+    // Rear Ventilation Slits
     for (let s = 0; s < 6; s++) {
       const ventGeo = new THREE.BoxGeometry(2.4, 0.04, 0.04);
       const ventMesh = new THREE.Mesh(ventGeo, bezelMat);
@@ -306,7 +306,7 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
     driveLed2.position.set(-0.35, -0.93, 1.82);
     computerGroup.add(driveLed2);
 
-    // Front Commodore PET 8296 Aluminum Badge
+    // Front Aluminum Badge
     const badgeGeo = new THREE.BoxGeometry(1.0, 0.14, 0.02);
     const badgeMesh = new THREE.Mesh(badgeGeo, metallicMat);
     badgeMesh.position.set(0.85, -0.88, 1.78);
@@ -316,7 +316,7 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0xffb000, 1.9);
+    const keyLight = new THREE.DirectionalLight(0xffb000, 2.0);
     keyLight.position.set(4, 5, 4);
     keyLight.castShadow = true;
     scene.add(keyLight);
@@ -329,7 +329,7 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
     topRimLight.position.set(0, 6, -3);
     scene.add(topRimLight);
 
-    const screenGlowLight = new THREE.PointLight(0xffb000, 2.2, 4.2);
+    const screenGlowLight = new THREE.PointLight(0xffb000, 2.4, 4.4);
     screenGlowLight.position.set(0, 0.6, 1.3);
     scene.add(screenGlowLight);
 
@@ -339,7 +339,7 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
     let mouseDownPos = { x: 0, y: 0 };
     let mouseDownTime = 0;
     let angularVelocity = { x: 0, y: 0 };
-    let currentRotation = { x: 0.06, y: -0.12 }; // Default perspective showing the full body
+    let currentRotation = { x: 0.05, y: -0.10 }; // Natural perspective
     let mouseParallax = { x: 0, y: 0 };
 
     const onMouseDown = (e) => {
@@ -375,7 +375,7 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
       isDragging = false;
       const dist = Math.hypot(e.clientX - mouseDownPos.x, e.clientY - mouseDownPos.y);
       const duration = Date.now() - mouseDownTime;
-      // Quick click without drag triggers portfolio transition
+      // Quick click triggers portfolio transition
       if (dist < 10 && duration < 500) {
         playKeyClick(true);
         if (onEnterPortfolioRef.current) {
@@ -483,11 +483,11 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
 
     // Recenter view
     recenterCameraRef.current = () => {
-      currentRotation = { x: 0.06, y: -0.12 };
+      currentRotation = { x: 0.05, y: -0.10 };
       angularVelocity = { x: 0, y: 0 };
     };
 
-    // 7. Dynamic 1024x768 High-Definition CRT Screen Drawing Loop
+    // 7. Full-Screen Dynamic 1024x768 High-Definition CRT Screen Drawing Loop
     let tick = 0;
 
     const renderScreen = () => {
@@ -516,91 +516,150 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
       screenGlowLight.color.set(primaryColor);
       keyLight.color.set(primaryColor);
 
-      // Clear Screen with Vintage CRT Obsidian
+      // 1. Clear Screen with Vintage CRT Obsidian
       screenCtx.fillStyle = '#02050b';
       screenCtx.fillRect(0, 0, 1024, 768);
 
-      // CRT Scanlines
+      // 2. Full-Screen CRT Scanlines
       screenCtx.fillStyle = `${primaryColor}0d`;
       for (let y = 0; y < 768; y += 8) {
         screenCtx.fillRect(0, y, 1024, 3);
       }
 
-      // CRT Curved Screen Vignette & Outer Border
-      screenCtx.strokeStyle = `${primaryColor}45`;
+      // 3. CRT Outer Vignette Border (Spanning edge-to-edge)
+      screenCtx.strokeStyle = `${primaryColor}40`;
       screenCtx.lineWidth = 10;
-      screenCtx.strokeRect(16, 16, 992, 736);
+      screenCtx.strokeRect(10, 10, 1004, 748);
 
-      // Top Vintage Header Bar
-      screenCtx.fillStyle = `${primaryColor}30`;
-      screenCtx.fillRect(28, 28, 968, 56);
+      // 4. Top System Header Banner (Spanning full width x=20 to 1004)
+      screenCtx.fillStyle = `${primaryColor}28`;
+      screenCtx.fillRect(20, 20, 984, 52);
+      screenCtx.strokeStyle = `${primaryColor}60`;
+      screenCtx.lineWidth = 1.5;
+      screenCtx.strokeRect(20, 20, 984, 52);
+
       screenCtx.fillStyle = primaryColor;
-      screenCtx.font = 'bold 24px "Fira Code", monospace';
-      screenCtx.fillText('*** COMMODORE PET 8296 DEVOPS OS // 64K RAM ***', 48, 65);
+      screenCtx.font = 'bold 22px "Fira Code", monospace';
+      screenCtx.fillText('*** COMMODORE PET 8296 DEVOPS OS // 64K RAM READY ***', 36, 54);
 
-      // Basic Operator Bio (Left Side) - Large & High Contrast
-      screenCtx.font = '22px "Fira Code", monospace';
       screenCtx.fillStyle = accentColor;
-      screenCtx.fillText('64K RAM SYSTEM  38911 BYTES FREE', 48, 126);
+      screenCtx.font = 'bold 18px "Fira Code", monospace';
+      screenCtx.fillText('● SYSTEM 100% HEALTHY', 760, 54);
 
+      // 5. Operator Identity Card (Spanning full width x=20 to 1004, y=82 to 195)
+      screenCtx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+      screenCtx.fillRect(20, 82, 984, 114);
+      screenCtx.strokeStyle = `${primaryColor}35`;
+      screenCtx.strokeRect(20, 82, 984, 114);
+
+      // Operator Name (Large & Bold)
       screenCtx.fillStyle = '#ffffff';
-      screenCtx.font = 'bold 26px "Fira Code", monospace';
-      screenCtx.fillText('OPERATOR : CHAKKA CHINNI KRISHNA', 48, 172);
+      screenCtx.font = 'bold 30px "Fira Code", monospace';
+      screenCtx.fillText('CHAKKA CHINNI KRISHNA', 40, 122);
 
-      screenCtx.font = '22px "Fira Code", monospace';
+      screenCtx.fillStyle = secondaryColor;
+      screenCtx.font = 'bold 22px "Fira Code", monospace';
+      screenCtx.fillText('(@GrayViper)', 480, 122);
+
+      // Role & Education Lines
       screenCtx.fillStyle = primaryColor;
-      screenCtx.fillText('HANDLE   : @GrayViper', 48, 218);
-      screenCtx.fillText('ROLE     : DevOps Engineer & Full-Stack Specialist', 48, 264);
+      screenCtx.font = '20px "Fira Code", monospace';
+      screenCtx.fillText('ROLE : DevOps Engineer · Cloud Infrastructure & Full-Stack Specialist', 40, 154);
 
       screenCtx.fillStyle = '#cbd5e1';
-      screenCtx.fillText('ACADEMIC : B.Tech CSE @ LPU (CGPA: 7.2)', 48, 310);
-      screenCtx.fillText('CLOUD/IaC: AWS (EKS) · Kubernetes · Terraform', 48, 356);
-      screenCtx.fillText('CI/CD/OS : GitHub Actions · Docker · Linux/Bash', 48, 402);
-      screenCtx.fillText('STACK    : FastAPI · Next.js · TypeScript · Mongo', 48, 448);
-      screenCtx.fillText('AGENTIC  : Multi-Agent Workflows & LLMs (Xebia)', 48, 494);
+      screenCtx.font = '19px "Fira Code", monospace';
+      screenCtx.fillText('EDU  : B.Tech CSE @ Lovely Professional University (CGPA 7.2)', 40, 182);
 
-      screenCtx.fillStyle = accentColor;
-      screenCtx.fillText('STATUS   : ALL SYSTEMS ONLINE · 99.9% CLUSTER UPTIME', 48, 540);
+      // 6. Two-Column Full Technical Grid (Spanning y=206 to 546)
+      // Left Column Box: Cloud & IaC
+      screenCtx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+      screenCtx.fillRect(20, 206, 482, 336);
+      screenCtx.strokeStyle = `${primaryColor}30`;
+      screenCtx.strokeRect(20, 206, 482, 336);
 
-      // ASCII Dithered Tech Badge (Right Side)
-      screenCtx.fillStyle = `${primaryColor}80`;
+      screenCtx.fillStyle = primaryColor;
+      screenCtx.font = 'bold 20px "Fira Code", monospace';
+      screenCtx.fillText('⚡ [01] CLOUD, CONTAINERS & IaC', 36, 240);
+
       screenCtx.font = '18px "Fira Code", monospace';
-      const asciiArt = [
-        '┌─────────────────┐',
-        '│   [CK-DEVOPS]   │',
-        '│   AWS  ·  EKS   │',
-        '│   ☸️  🐳  ⚡  🚀 │',
-        '│   GITOPS 100%   │',
-        '└─────────────────┘'
+      const cloudItems = [
+        '• AWS Cloud (EKS 1.30, EC2, S3, VPC, IAM)',
+        '• Kubernetes Cluster Management & Helm',
+        '• Terraform Infrastructure as Code (IaC)',
+        '• Docker Multi-Stage Builds & Optimization',
+        '• Prometheus Metrics & Grafana Dashboards',
+        '• Linux / Unix Administration & Bash Shell',
+        '• Zero-Downtime Rolling Release Strategies'
       ];
-      asciiArt.forEach((line, idx) => {
-        screenCtx.fillText(line, 730, 160 + idx * 28);
+      cloudItems.forEach((item, idx) => {
+        screenCtx.fillStyle = idx === 0 ? accentColor : (idx === 1 ? secondaryColor : '#cbd5e1');
+        screenCtx.fillText(item, 36, 280 + idx * 36);
       });
 
-      // Interactive Shell Input Prompt
+      // Right Column Box: CI/CD, Full-Stack & Agentic AI
+      screenCtx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+      screenCtx.fillRect(522, 206, 482, 336);
+      screenCtx.strokeStyle = `${primaryColor}30`;
+      screenCtx.strokeRect(522, 206, 482, 336);
+
       screenCtx.fillStyle = primaryColor;
-      screenCtx.font = 'bold 24px "Fira Code", monospace';
-      screenCtx.fillText(`devops@GrayViper:~$ ${shellInputRef.current}`, 48, 600);
+      screenCtx.font = 'bold 20px "Fira Code", monospace';
+      screenCtx.fillText('🚀 [02] CI/CD, DEV & AGENTIC AI', 538, 240);
+
+      screenCtx.font = '18px "Fira Code", monospace';
+      const devItems = [
+        '• GitHub Actions Automated CI/CD Pipelines',
+        '• ArgoCD GitOps Continuous Delivery',
+        '• FastAPI High-Performance Python APIs',
+        '• Next.js · React · TypeScript Frontends',
+        '• MongoDB Atlas & PostgreSQL Databases',
+        '• Agentic AI & Multi-Agent Systems (Xebia)',
+        '• RESTful APIs, JWT Auth & WebSockets'
+      ];
+      devItems.forEach((item, idx) => {
+        screenCtx.fillStyle = idx === 0 ? accentColor : (idx === 5 ? secondaryColor : '#cbd5e1');
+        screenCtx.fillText(item, 538, 280 + idx * 36);
+      });
+
+      // 7. Live Telemetry Ribbon (Spanning y=552 to 614)
+      screenCtx.fillStyle = `${primaryColor}18`;
+      screenCtx.fillRect(20, 552, 984, 60);
+      screenCtx.strokeStyle = `${primaryColor}40`;
+      screenCtx.strokeRect(20, 552, 984, 60);
+
+      screenCtx.fillStyle = accentColor;
+      screenCtx.font = 'bold 19px "Fira Code", monospace';
+      screenCtx.fillText('● CLUSTER TELEMETRY:', 36, 588);
+
+      screenCtx.fillStyle = '#ffffff';
+      screenCtx.font = '18px "Fira Code", monospace';
+      screenCtx.fillText('6/6 PODS RUNNING · 99.9% UPTIME · SLA 1.82s · GITOPS SYNCED', 280, 588);
+
+      // 8. Full-Width Glowing Action / Interactive Prompt Bar (Spanning y=624 to 736)
+      screenCtx.fillStyle = `${primaryColor}25`;
+      screenCtx.fillRect(20, 624, 984, 114);
+      screenCtx.strokeStyle = primaryColor;
+      screenCtx.lineWidth = 2.5;
+      screenCtx.strokeRect(20, 624, 984, 114);
+
+      // Interactive Typing Shell Prompt (Left)
+      screenCtx.fillStyle = primaryColor;
+      screenCtx.font = 'bold 22px "Fira Code", monospace';
+      screenCtx.fillText(`devops@GrayViper:~$ ${shellInputRef.current}`, 40, 666);
 
       if (Math.floor(tick / 15) % 2 === 0) {
         const textWidth = screenCtx.measureText(`devops@GrayViper:~$ ${shellInputRef.current}`).width;
-        screenCtx.fillRect(52 + textWidth, 576, 16, 28);
+        screenCtx.fillRect(44 + textWidth, 646, 14, 26);
       }
 
-      // Blinking Scroll / Enter Invitation Bar (Bottom CRT)
-      screenCtx.fillStyle = `${primaryColor}22`;
-      screenCtx.fillRect(28, 638, 968, 88);
-      screenCtx.strokeStyle = primaryColor;
-      screenCtx.lineWidth = 2.5;
-      screenCtx.strokeRect(28, 638, 968, 88);
-
+      // Pulsing Enter Invitation Cue (Bottom Line)
       if (Math.floor(tick / 18) % 2 === 0) {
         screenCtx.fillStyle = primaryColor;
       } else {
         screenCtx.fillStyle = '#ffffff';
       }
       screenCtx.font = 'bold 23px "Fira Code", monospace';
-      screenCtx.fillText('▶ SCROLL DOWN OR CLICK TO ENTER PORTFOLIO █', 120, 692);
+      screenCtx.fillText('▶ CLICK COMPUTER OR PRESS [ENTER] TO ACCESS FULL PORTFOLIO █', 60, 708);
 
       screenTexture.needsUpdate = true;
 
