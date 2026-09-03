@@ -1,18 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { Volume2, VolumeX, RefreshCw } from 'lucide-react';
+import { Volume2, VolumeX, RefreshCw, Play } from 'lucide-react';
 
 /**
- * RetroComputer3D Component - Full 3D Computer Landing Stage (Optimized Viewport Sizing)
+ * RetroComputer3D Component - Real-time CRT Typewriter Animation Stage
  *
  * Features:
- * - Scaled model (0.78x) and tuned camera distance to ensure the entire computer
- *   (CRT monitor, mechanical keyboard deck, floppy drives, and ground shadow)
- *   fits comfortably within any desktop or mobile screen height without clipping.
- * - 1024x768 High-Definition CRT Texture for crystal-clear readability.
- * - 360° mouse drag orbit with momentum and cursor parallax.
- * - Interactive Amber/Cyan/Green phosphor selector.
- * - Web Audio API synthesized mechanical keyboard clicks.
+ * - Real-time typewriter boot animation: Chinni Krishna's operator bio,
+ *   cloud architecture matrix, and cluster telemetry type out dynamically on the CRT screen.
+ * - Synchronized 3D physical keycap depressions and mechanical keyboard audio clicks as letters type.
+ * - Interactive shell prompt with blinking cursor once typing completes.
+ * - Instant skip on click/keypress, plus a "Replay Typing" controller in ambient tools.
+ * - Calibrated 0.82x 3D model scale for desktop containment.
  */
 export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPortfolio }) {
   const mountRef = useRef(null);
@@ -42,6 +41,7 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
 
   const keypressAnimationTriggerRef = useRef(null);
   const recenterCameraRef = useRef(null);
+  const restartTypewriterRef = useRef(null);
 
   // Web Audio API Synthesizer for Mechanical Keyboard Keypresses
   const playKeyClick = (isEnter = false) => {
@@ -56,17 +56,17 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
       const gain = ctx.createGain();
 
       osc.type = isEnter ? 'sawtooth' : 'square';
-      const startFreq = isEnter ? 240 : 360 + Math.random() * 80;
+      const startFreq = isEnter ? 240 : 340 + Math.random() * 80;
       osc.frequency.setValueAtTime(startFreq, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + (isEnter ? 0.07 : 0.04));
+      osc.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + (isEnter ? 0.07 : 0.035));
 
-      gain.gain.setValueAtTime(0.14, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (isEnter ? 0.07 : 0.04));
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (isEnter ? 0.07 : 0.035));
 
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start();
-      osc.stop(ctx.currentTime + (isEnter ? 0.08 : 0.05));
+      osc.stop(ctx.currentTime + (isEnter ? 0.08 : 0.04));
     } catch {
       // ignore audio context restrictions
     }
@@ -83,7 +83,6 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
     const scene = new THREE.Scene();
 
     const camera = new THREE.PerspectiveCamera(37, width / height, 0.1, 100);
-    // Optimized camera distance for prominent, commanding presence within viewport
     const defaultCameraPos = new THREE.Vector3(0, 0.20, 5.75);
     const scrolledCameraPos = new THREE.Vector3(0, 0.30, 6.65);
     camera.position.copy(defaultCameraPos);
@@ -148,7 +147,6 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
 
     // 4. Procedural 3D Commodore PET 8296 Model Group
     const computerGroup = new THREE.Group();
-    // Scaled to 0.82x for a larger, bolder presence that remains within desktop bounds
     computerGroup.scale.set(0.82, 0.82, 0.82);
     scene.add(computerGroup);
 
@@ -230,15 +228,20 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
 
         kMesh.position.set(xPos, originalY, zPos);
         kMesh.rotation.x = 0.16;
-        kMesh.userData = { originalY, depressTimer: 0 };
+        kMesh.userData = { originalY, depressTimer: 0, isEnter };
         computerGroup.add(kMesh);
         keyMeshes.push(kMesh);
       }
     }
 
-    keypressAnimationTriggerRef.current = () => {
-      const randKey = keyMeshes[Math.floor(Math.random() * keyMeshes.length)];
-      if (randKey) randKey.userData.depressTimer = 8;
+    keypressAnimationTriggerRef.current = (pressEnter = false) => {
+      if (pressEnter) {
+        const enterKey = keyMeshes.find(k => k.userData.isEnter);
+        if (enterKey) enterKey.userData.depressTimer = 8;
+      } else {
+        const randKey = keyMeshes[Math.floor(Math.random() * keyMeshes.length)];
+        if (randKey) randKey.userData.depressTimer = 6;
+      }
     };
 
     // Monitor Hood Enclosure
@@ -262,7 +265,7 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
     bezelBackMesh.position.set(0, 0.55, 0.9);
     computerGroup.add(bezelBackMesh);
 
-    // Flat Edge-to-Edge Rectangular Screen Face
+    // Flat Edge-to-Edge Rectangular Screen Face (100% Full-Screen)
     const screenGeo = new THREE.PlaneGeometry(2.68, 1.84);
     const screenMesh = new THREE.Mesh(screenGeo, screenMat);
     screenMesh.position.set(0, 0.55, 1.01);
@@ -353,8 +356,17 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
     let mouseDownPos = { x: 0, y: 0 };
     let mouseDownTime = 0;
     let angularVelocity = { x: 0, y: 0 };
-    let currentRotation = { x: 0.05, y: -0.10 }; // Natural perspective
+    let currentRotation = { x: 0.05, y: -0.10 };
     let mouseParallax = { x: 0, y: 0 };
+
+    // Typewriter Animation State
+    let typeTick = 0;
+    let isTypewriterFinished = false;
+
+    restartTypewriterRef.current = () => {
+      typeTick = 0;
+      isTypewriterFinished = false;
+    };
 
     const onMouseDown = (e) => {
       isDragging = true;
@@ -389,11 +401,20 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
       isDragging = false;
       const dist = Math.hypot(e.clientX - mouseDownPos.x, e.clientY - mouseDownPos.y);
       const duration = Date.now() - mouseDownTime;
-      // Quick click triggers portfolio transition
+
+      // Quick click
       if (dist < 10 && duration < 500) {
-        playKeyClick(true);
-        if (onEnterPortfolioRef.current) {
-          onEnterPortfolioRef.current();
+        // If typewriter is still actively typing, skip to finished state on click
+        if (!isTypewriterFinished && typeTick < 390) {
+          typeTick = 400;
+          isTypewriterFinished = true;
+          playKeyClick(true);
+        } else {
+          // If already finished typing, proceed into portfolio
+          playKeyClick(true);
+          if (onEnterPortfolioRef.current) {
+            onEnterPortfolioRef.current();
+          }
         }
       }
     };
@@ -434,9 +455,15 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
         const dist = Math.hypot(t.clientX - touchStartPos.x, t.clientY - touchStartPos.y);
         const duration = Date.now() - touchStartTime;
         if (dist < 14 && duration < 500) {
-          playKeyClick(true);
-          if (onEnterPortfolioRef.current) {
-            onEnterPortfolioRef.current();
+          if (!isTypewriterFinished && typeTick < 390) {
+            typeTick = 400;
+            isTypewriterFinished = true;
+            playKeyClick(true);
+          } else {
+            playKeyClick(true);
+            if (onEnterPortfolioRef.current) {
+              onEnterPortfolioRef.current();
+            }
           }
         }
       }
@@ -455,18 +482,28 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
       if (keypressAnimationTriggerRef.current) {
-        keypressAnimationTriggerRef.current();
+        keypressAnimationTriggerRef.current(e.key === 'Enter');
       }
 
       if (e.key === 'Enter') {
         playKeyClick(true);
+        // If typing still in progress, complete it
+        if (!isTypewriterFinished && typeTick < 390) {
+          typeTick = 400;
+          isTypewriterFinished = true;
+          return;
+        }
+
         const cmd = shellInputRef.current.trim().toLowerCase();
         if (!cmd || cmd === 'enter' || cmd === 'start' || cmd === 'portfolio' || cmd === 'scroll') {
           if (onEnterPortfolioRef.current) {
             onEnterPortfolioRef.current();
           }
         } else if (cmd === 'help') {
-          setShellHistory(prev => [...prev, 'COMMANDS: skills, projects, status, certs, enter, clear']);
+          setShellHistory(prev => [...prev, 'COMMANDS: skills, projects, status, certs, enter, clear, replay']);
+          setShellInput('');
+        } else if (cmd === 'replay') {
+          if (restartTypewriterRef.current) restartTypewriterRef.current();
           setShellInput('');
         } else if (cmd === 'skills') {
           setShellHistory(prev => [...prev, 'STACK: AWS (EKS), Kubernetes, Docker, Terraform, FastAPI, Next.js']);
@@ -501,11 +538,38 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
       angularVelocity = { x: 0, y: 0 };
     };
 
-    // 7. Full-Screen Dynamic 1024x768 High-Definition CRT Screen Drawing Loop
+    // Helper for typewriter slicing
+    const getTypewritten = (fullText, currentTick, startTick, charsPerTick = 1.3) => {
+      if (currentTick < startTick) return { text: '', isDone: false, isTyping: false };
+      const numChars = Math.floor((currentTick - startTick) * charsPerTick);
+      if (numChars >= fullText.length) {
+        return { text: fullText, isDone: true, isTyping: false };
+      }
+      return { text: fullText.substring(0, numChars), isDone: false, isTyping: true };
+    };
+
+    // 7. Dynamic Typewriter 1024x768 High-Definition CRT Screen Drawing Loop
     let tick = 0;
 
     const renderScreen = () => {
       tick++;
+      typeTick++;
+
+      if (typeTick >= 400) {
+        isTypewriterFinished = true;
+      }
+
+      // Trigger 3D keycap depression & click sounds during active typing
+      if (!isTypewriterFinished && typeTick < 390) {
+        if (typeTick % 4 === 0) {
+          if (keypressAnimationTriggerRef.current) {
+            keypressAnimationTriggerRef.current(false);
+          }
+          if (typeTick % 8 === 0) {
+            playKeyClick(false);
+          }
+        }
+      }
 
       // Color Theme Palette
       const colorScheme = crtColorRef.current;
@@ -540,63 +604,71 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
         screenCtx.fillRect(0, y, 1024, 3);
       }
 
-      // 3. CRT Outer Vignette Border (Spanning edge-to-edge)
+      // 3. CRT Outer Vignette Border
       screenCtx.strokeStyle = `${primaryColor}40`;
       screenCtx.lineWidth = 10;
       screenCtx.strokeRect(10, 10, 1004, 748);
 
-      // 4. Top System Header Banner (Spanning full width x=20 to 1004)
-      screenCtx.fillStyle = `${primaryColor}28`;
-      screenCtx.fillRect(20, 20, 984, 52);
-      screenCtx.strokeStyle = `${primaryColor}60`;
-      screenCtx.lineWidth = 1.5;
-      screenCtx.strokeRect(20, 20, 984, 52);
+      // --- SECTION 1: TOP SYSTEM HEADER BANNER ---
+      const headerObj = getTypewritten('*** COMMODORE PET 8296 DEVOPS OS // 64K RAM READY ***', typeTick, 10, 1.8);
 
-      screenCtx.fillStyle = primaryColor;
-      screenCtx.font = 'bold 22px "Fira Code", monospace';
-      screenCtx.fillText('*** COMMODORE PET 8296 DEVOPS OS // 64K RAM READY ***', 36, 54);
+      if (typeTick >= 10) {
+        screenCtx.fillStyle = `${primaryColor}28`;
+        screenCtx.fillRect(20, 20, 984, 52);
+        screenCtx.strokeStyle = `${primaryColor}60`;
+        screenCtx.lineWidth = 1.5;
+        screenCtx.strokeRect(20, 20, 984, 52);
 
-      screenCtx.fillStyle = accentColor;
-      screenCtx.font = 'bold 18px "Fira Code", monospace';
-      screenCtx.fillText('● SYSTEM 100% HEALTHY', 760, 54);
+        screenCtx.fillStyle = primaryColor;
+        screenCtx.font = 'bold 22px "Fira Code", monospace';
+        screenCtx.fillText(headerObj.text + (headerObj.isTyping ? '█' : ''), 36, 54);
 
-      // 5. Operator Identity Card (Spanning full width x=20 to 1004, y=82 to 195)
-      screenCtx.fillStyle = 'rgba(255, 255, 255, 0.04)';
-      screenCtx.fillRect(20, 82, 984, 114);
-      screenCtx.strokeStyle = `${primaryColor}35`;
-      screenCtx.strokeRect(20, 82, 984, 114);
+        if (headerObj.isDone || typeTick >= 45) {
+          screenCtx.fillStyle = accentColor;
+          screenCtx.font = 'bold 18px "Fira Code", monospace';
+          screenCtx.fillText('● SYSTEM 100% HEALTHY', 760, 54);
+        }
+      }
 
-      // Operator Name (Large & Bold)
-      screenCtx.fillStyle = '#ffffff';
-      screenCtx.font = 'bold 30px "Fira Code", monospace';
-      screenCtx.fillText('CHAKKA CHINNI KRISHNA', 40, 122);
+      // --- SECTION 2: OPERATOR IDENTITY CARD ---
+      if (typeTick >= 48) {
+        screenCtx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+        screenCtx.fillRect(20, 82, 984, 114);
+        screenCtx.strokeStyle = `${primaryColor}35`;
+        screenCtx.strokeRect(20, 82, 984, 114);
 
-      screenCtx.fillStyle = secondaryColor;
-      screenCtx.font = 'bold 22px "Fira Code", monospace';
-      screenCtx.fillText('(@GrayViper)', 480, 122);
+        // Operator Name & Handle
+        const nameObj = getTypewritten('CHAKKA CHINNI KRISHNA', typeTick, 50, 1.6);
+        const handleObj = getTypewritten('(@GrayViper)', typeTick, 70, 1.6);
 
-      // Role & Education Lines
-      screenCtx.fillStyle = primaryColor;
-      screenCtx.font = '20px "Fira Code", monospace';
-      screenCtx.fillText('ROLE : DevOps Engineer · Cloud Infrastructure & Full-Stack Specialist', 40, 154);
+        screenCtx.fillStyle = '#ffffff';
+        screenCtx.font = 'bold 30px "Fira Code", monospace';
+        screenCtx.fillText(nameObj.text + (nameObj.isTyping ? '█' : ''), 40, 122);
 
-      screenCtx.fillStyle = '#cbd5e1';
-      screenCtx.font = '19px "Fira Code", monospace';
-      screenCtx.fillText('EDU  : B.Tech CSE @ Lovely Professional University (CGPA 7.2)', 40, 182);
+        if (nameObj.isDone) {
+          screenCtx.fillStyle = secondaryColor;
+          screenCtx.font = 'bold 22px "Fira Code", monospace';
+          screenCtx.fillText(handleObj.text + (handleObj.isTyping ? '█' : ''), 480, 122);
+        }
 
-      // 6. Two-Column Full Technical Grid (Spanning y=206 to 546)
-      // Left Column Box: Cloud & IaC
-      screenCtx.fillStyle = 'rgba(255, 255, 255, 0.02)';
-      screenCtx.fillRect(20, 206, 482, 336);
-      screenCtx.strokeStyle = `${primaryColor}30`;
-      screenCtx.strokeRect(20, 206, 482, 336);
+        // Role & Education
+        const roleObj = getTypewritten('ROLE : DevOps Engineer · Cloud Infrastructure & Full-Stack Specialist', typeTick, 85, 2.0);
+        if (roleObj.text) {
+          screenCtx.fillStyle = primaryColor;
+          screenCtx.font = '20px "Fira Code", monospace';
+          screenCtx.fillText(roleObj.text + (roleObj.isTyping ? '█' : ''), 40, 154);
+        }
 
-      screenCtx.fillStyle = primaryColor;
-      screenCtx.font = 'bold 20px "Fira Code", monospace';
-      screenCtx.fillText('⚡ [01] CLOUD, CONTAINERS & IaC', 36, 240);
+        const eduObj = getTypewritten('EDU  : B.Tech CSE @ Lovely Professional University (CGPA 7.2)', typeTick, 125, 2.0);
+        if (eduObj.text) {
+          screenCtx.fillStyle = '#cbd5e1';
+          screenCtx.font = '19px "Fira Code", monospace';
+          screenCtx.fillText(eduObj.text + (eduObj.isTyping ? '█' : ''), 40, 182);
+        }
+      }
 
-      screenCtx.font = '18px "Fira Code", monospace';
-      const cloudItems = [
+      // --- SECTION 3: TWO-COLUMN TECHNICAL MATRIX ---
+      const cloudLines = [
         '• AWS Cloud (EKS 1.30, EC2, S3, VPC, IAM)',
         '• Kubernetes Cluster Management & Helm',
         '• Terraform Infrastructure as Code (IaC)',
@@ -605,23 +677,8 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
         '• Linux / Unix Administration & Bash Shell',
         '• Zero-Downtime Rolling Release Strategies'
       ];
-      cloudItems.forEach((item, idx) => {
-        screenCtx.fillStyle = idx === 0 ? accentColor : (idx === 1 ? secondaryColor : '#cbd5e1');
-        screenCtx.fillText(item, 36, 280 + idx * 36);
-      });
 
-      // Right Column Box: CI/CD, Full-Stack & Agentic AI
-      screenCtx.fillStyle = 'rgba(255, 255, 255, 0.02)';
-      screenCtx.fillRect(522, 206, 482, 336);
-      screenCtx.strokeStyle = `${primaryColor}30`;
-      screenCtx.strokeRect(522, 206, 482, 336);
-
-      screenCtx.fillStyle = primaryColor;
-      screenCtx.font = 'bold 20px "Fira Code", monospace';
-      screenCtx.fillText('🚀 [02] CI/CD, DEV & AGENTIC AI', 538, 240);
-
-      screenCtx.font = '18px "Fira Code", monospace';
-      const devItems = [
+      const devLines = [
         '• GitHub Actions Automated CI/CD Pipelines',
         '• ArgoCD GitOps Continuous Delivery',
         '• FastAPI High-Performance Python APIs',
@@ -630,50 +687,95 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
         '• Agentic AI & Multi-Agent Systems (Xebia)',
         '• RESTful APIs, JWT Auth & WebSockets'
       ];
-      devItems.forEach((item, idx) => {
-        screenCtx.fillStyle = idx === 0 ? accentColor : (idx === 5 ? secondaryColor : '#cbd5e1');
-        screenCtx.fillText(item, 538, 280 + idx * 36);
-      });
 
-      // 7. Live Telemetry Ribbon (Spanning y=552 to 614)
-      screenCtx.fillStyle = `${primaryColor}18`;
-      screenCtx.fillRect(20, 552, 984, 60);
-      screenCtx.strokeStyle = `${primaryColor}40`;
-      screenCtx.strokeRect(20, 552, 984, 60);
+      // Left Column: Cloud & IaC
+      if (typeTick >= 160) {
+        screenCtx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+        screenCtx.fillRect(20, 206, 482, 336);
+        screenCtx.strokeStyle = `${primaryColor}30`;
+        screenCtx.strokeRect(20, 206, 482, 336);
 
-      screenCtx.fillStyle = accentColor;
-      screenCtx.font = 'bold 19px "Fira Code", monospace';
-      screenCtx.fillText('● CLUSTER TELEMETRY:', 36, 588);
-
-      screenCtx.fillStyle = '#ffffff';
-      screenCtx.font = '18px "Fira Code", monospace';
-      screenCtx.fillText('6/6 PODS RUNNING · 99.9% UPTIME · SLA 1.82s · GITOPS SYNCED', 280, 588);
-
-      // 8. Full-Width Glowing Action / Interactive Prompt Bar (Spanning y=624 to 736)
-      screenCtx.fillStyle = `${primaryColor}25`;
-      screenCtx.fillRect(20, 624, 984, 114);
-      screenCtx.strokeStyle = primaryColor;
-      screenCtx.lineWidth = 2.5;
-      screenCtx.strokeRect(20, 624, 984, 114);
-
-      // Interactive Typing Shell Prompt (Left)
-      screenCtx.fillStyle = primaryColor;
-      screenCtx.font = 'bold 22px "Fira Code", monospace';
-      screenCtx.fillText(`devops@GrayViper:~$ ${shellInputRef.current}`, 40, 666);
-
-      if (Math.floor(tick / 15) % 2 === 0) {
-        const textWidth = screenCtx.measureText(`devops@GrayViper:~$ ${shellInputRef.current}`).width;
-        screenCtx.fillRect(44 + textWidth, 646, 14, 26);
-      }
-
-      // Pulsing Enter Invitation Cue (Bottom Line)
-      if (Math.floor(tick / 18) % 2 === 0) {
         screenCtx.fillStyle = primaryColor;
-      } else {
-        screenCtx.fillStyle = '#ffffff';
+        screenCtx.font = 'bold 20px "Fira Code", monospace';
+        screenCtx.fillText('⚡ [01] CLOUD, CONTAINERS & IaC', 36, 240);
+
+        screenCtx.font = '18px "Fira Code", monospace';
+        cloudLines.forEach((item, idx) => {
+          const lineObj = getTypewritten(item, typeTick, 170 + idx * 16, 2.4);
+          if (lineObj.text) {
+            screenCtx.fillStyle = idx === 0 ? accentColor : (idx === 1 ? secondaryColor : '#cbd5e1');
+            screenCtx.fillText(lineObj.text + (lineObj.isTyping ? '█' : ''), 36, 280 + idx * 36);
+          }
+        });
       }
-      screenCtx.font = 'bold 23px "Fira Code", monospace';
-      screenCtx.fillText('▶ CLICK COMPUTER OR PRESS [ENTER] TO ACCESS FULL PORTFOLIO █', 60, 708);
+
+      // Right Column: CI/CD & Dev
+      if (typeTick >= 170) {
+        screenCtx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+        screenCtx.fillRect(522, 206, 482, 336);
+        screenCtx.strokeStyle = `${primaryColor}30`;
+        screenCtx.strokeRect(522, 206, 482, 336);
+
+        screenCtx.fillStyle = primaryColor;
+        screenCtx.font = 'bold 20px "Fira Code", monospace';
+        screenCtx.fillText('🚀 [02] CI/CD, DEV & AGENTIC AI', 538, 240);
+
+        screenCtx.font = '18px "Fira Code", monospace';
+        devLines.forEach((item, idx) => {
+          const lineObj = getTypewritten(item, typeTick, 180 + idx * 16, 2.4);
+          if (lineObj.text) {
+            screenCtx.fillStyle = idx === 0 ? accentColor : (idx === 5 ? secondaryColor : '#cbd5e1');
+            screenCtx.fillText(lineObj.text + (lineObj.isTyping ? '█' : ''), 538, 280 + idx * 36);
+          }
+        });
+      }
+
+      // --- SECTION 4: LIVE TELEMETRY RIBBON ---
+      if (typeTick >= 295) {
+        screenCtx.fillStyle = `${primaryColor}18`;
+        screenCtx.fillRect(20, 552, 984, 60);
+        screenCtx.strokeStyle = `${primaryColor}40`;
+        screenCtx.strokeRect(20, 552, 984, 60);
+
+        screenCtx.fillStyle = accentColor;
+        screenCtx.font = 'bold 19px "Fira Code", monospace';
+        screenCtx.fillText('● CLUSTER TELEMETRY:', 36, 588);
+
+        const telemetryObj = getTypewritten('6/6 PODS RUNNING · 99.9% UPTIME · SLA 1.82s · GITOPS SYNCED', typeTick, 305, 2.2);
+        if (telemetryObj.text) {
+          screenCtx.fillStyle = '#ffffff';
+          screenCtx.font = '18px "Fira Code", monospace';
+          screenCtx.fillText(telemetryObj.text + (telemetryObj.isTyping ? '█' : ''), 280, 588);
+        }
+      }
+
+      // --- SECTION 5: INTERACTIVE SHELL & ENTER ACTION BAR ---
+      if (typeTick >= 350) {
+        screenCtx.fillStyle = `${primaryColor}25`;
+        screenCtx.fillRect(20, 624, 984, 114);
+        screenCtx.strokeStyle = primaryColor;
+        screenCtx.lineWidth = 2.5;
+        screenCtx.strokeRect(20, 624, 984, 114);
+
+        // Interactive Typing Shell Prompt (Left)
+        screenCtx.fillStyle = primaryColor;
+        screenCtx.font = 'bold 22px "Fira Code", monospace';
+        screenCtx.fillText(`devops@GrayViper:~$ ${shellInputRef.current}`, 40, 666);
+
+        if (Math.floor(tick / 15) % 2 === 0) {
+          const textWidth = screenCtx.measureText(`devops@GrayViper:~$ ${shellInputRef.current}`).width;
+          screenCtx.fillRect(44 + textWidth, 646, 14, 26);
+        }
+
+        // Pulsing Enter Invitation Cue
+        if (Math.floor(tick / 18) % 2 === 0) {
+          screenCtx.fillStyle = primaryColor;
+        } else {
+          screenCtx.fillStyle = '#ffffff';
+        }
+        screenCtx.font = 'bold 23px "Fira Code", monospace';
+        screenCtx.fillText('▶ CLICK COMPUTER OR PRESS [ENTER] TO ACCESS FULL PORTFOLIO █', 60, 708);
+      }
 
       screenTexture.needsUpdate = true;
 
@@ -734,11 +836,10 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
       height = container.clientHeight || window.innerHeight;
       camera.aspect = width / height;
 
-      // Ensure model fits comfortably on shorter / ultra-wide screens
       if (camera.aspect > 1.8) {
         camera.fov = 38;
       } else if (camera.aspect < 1.0) {
-        camera.fov = 48; // Mobile portrait
+        camera.fov = 48;
       } else {
         camera.fov = 36;
       }
@@ -748,7 +849,7 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
     };
 
     window.addEventListener('resize', handleResize);
-    handleResize(); // Call once on init
+    handleResize();
 
     return () => {
       container.removeEventListener('mousedown', onMouseDown);
@@ -788,7 +889,7 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
           justifyContent: 'center',
           userSelect: 'none'
         }}
-        title="Click to enter portfolio, or drag to rotate 3D computer in 360°!"
+        title="Click to enter portfolio (or skip typing), or drag to rotate 3D computer in 360°!"
       />
 
       {/* Floating Minimalist Ambient Controls (Bottom Right Corner) */}
@@ -807,8 +908,29 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
         padding: '6px 10px',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6)'
       }}>
+        {/* Replay Typing Animation Button */}
+        <button
+          onClick={() => restartTypewriterRef.current && restartTypewriterRef.current()}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: 'var(--f1-yellow)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            padding: '2px 6px',
+            fontSize: '0.72rem',
+            fontFamily: 'var(--font-mono)',
+            fontWeight: '700'
+          }}
+          title="Replay Typewriter Boot Sequence"
+        >
+          <Play size={12} /> Replay
+        </button>
+
         {/* Phosphor Color Selector */}
-        <div style={{ display: 'flex', gap: '5px', paddingRight: '6px', borderRight: '1px solid var(--border-subtle)' }}>
+        <div style={{ display: 'flex', gap: '5px', paddingRight: '6px', borderRight: '1px solid var(--border-subtle)', borderLeft: '1px solid var(--border-subtle)', paddingLeft: '6px' }}>
           {[
             { id: 'amber', color: '#ffb000', label: 'Amber Phosphor' },
             { id: 'cyan', color: '#00f2fe', label: 'Cyan Phosphor' },
