@@ -252,26 +252,36 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
       computerGroup.add(ventMesh);
     }
 
-    // Monitor Front Bezel
-    const bezelGeo = new THREE.BoxGeometry(2.9, 2.0, 0.25);
-    const bezelMesh = new THREE.Mesh(bezelGeo, bezelMat);
-    bezelMesh.position.set(0, 0.55, 0.9);
-    computerGroup.add(bezelMesh);
+    // Monitor Front Bezel & Outer Frame
+    const bezelBackGeo = new THREE.BoxGeometry(2.95, 2.05, 0.2);
+    const bezelBackMesh = new THREE.Mesh(bezelBackGeo, bezelMat);
+    bezelBackMesh.position.set(0, 0.55, 0.9);
+    computerGroup.add(bezelBackMesh);
 
-    // Curved CRT Screen Surface
-    const screenGeo = new THREE.PlaneGeometry(2.4, 1.6, 8, 8);
-    const posAttr = screenGeo.attributes.position;
-    for (let i = 0; i < posAttr.count; i++) {
-      const x = posAttr.getX(i);
-      const y = posAttr.getY(i);
-      const dist = Math.sqrt(x * x + y * y);
-      posAttr.setZ(i, Math.cos(dist * 0.7) * 0.06 - 0.06);
-    }
-    screenGeo.computeVertexNormals();
-
+    // Flat Edge-to-Edge Rectangular Screen Face (100% Full-Screen, zero circular distortion)
+    const screenGeo = new THREE.PlaneGeometry(2.68, 1.84);
     const screenMesh = new THREE.Mesh(screenGeo, screenMat);
-    screenMesh.position.set(0, 0.58, 1.04);
+    screenMesh.position.set(0, 0.55, 1.01);
     computerGroup.add(screenMesh);
+
+    // Bezel Border Framing (Top, Bottom, Left, Right)
+    const tbTrimGeo = new THREE.BoxGeometry(2.95, 0.11, 0.06);
+    const topTrim = new THREE.Mesh(tbTrimGeo, bezelMat);
+    topTrim.position.set(0, 1.51, 1.03);
+    computerGroup.add(topTrim);
+
+    const btmTrim = new THREE.Mesh(tbTrimGeo, bezelMat);
+    btmTrim.position.set(0, -0.41, 1.03);
+    computerGroup.add(btmTrim);
+
+    const lrTrimGeo = new THREE.BoxGeometry(0.14, 2.05, 0.06);
+    const leftTrim = new THREE.Mesh(lrTrimGeo, bezelMat);
+    leftTrim.position.set(-1.41, 0.55, 1.03);
+    computerGroup.add(leftTrim);
+
+    const rightTrim = new THREE.Mesh(lrTrimGeo, bezelMat);
+    rightTrim.position.set(1.41, 0.55, 1.03);
+    computerGroup.add(rightTrim);
 
     // Dual Floppy Disk Unit
     const driveBayGeo = new THREE.BoxGeometry(1.2, 0.22, 0.1);
