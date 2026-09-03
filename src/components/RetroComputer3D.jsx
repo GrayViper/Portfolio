@@ -1,40 +1,33 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { Terminal, Cpu, Zap, Activity, HardDrive, RefreshCw, Volume2, VolumeX, Maximize2, Minimize2, Move3d, Sparkles } from 'lucide-react';
+import { Volume2, VolumeX, RefreshCw } from 'lucide-react';
 
 /**
- * RetroComputer3D Component v5.0 (High-Fidelity edh.dev Edition)
- * Inspired by the Commodore PET 8296 3D Computer on edh.dev
+ * RetroComputer3D Component - Full 3D Computer Landing Stage
  *
  * Features:
- * - High-Detail 3D Mesh: Sculpted curved CRT monitor hood, deep bezel, curved CRT glass, dual floppy bays, individual mechanical keycaps, and soft contact shadow.
- * - Physics Drag Orbit & Inertia: Smooth 360° rotational momentum when dragging, plus cursor parallax tilt and idle floating bob.
- * - Interactive 3D Keyboard: Typing on real keyboard physically depresses the 3D keycaps and types directly onto the CRT screen!
- * - Camera Zoom / Inspect Mode: Smoothly zooms directly into the CRT display for an immersive vintage terminal experience.
- * - Dynamic CRT Canvas Engine: Scanlines, screen curvature vignette, blinking cursor, and 5 interactive modes.
- * - 4 Phosphor Color Presets & Web Audio API Mechanical Sound Synthesizer.
+ * - Edge-to-edge canvas displaying the FULL 3D Commodore PET 8296 Computer on initial page load.
+ * - 1024x768 High-Definition CRT Texture for crystal-clear text readability.
+ * - 360° mouse drag orbit with physics momentum + subtle cursor parallax.
+ * - Interactive Amber/Cyan/Green phosphor selector.
+ * - Web Audio API synthesized mechanical keyboard clicks.
  */
-export default function RetroComputer3D({ isFullScreenLanding = false }) {
+export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPortfolio }) {
   const mountRef = useRef(null);
-  const [screenMode, setScreenMode] = useState('telemetry'); // 'telemetry' | 'shell' | 'cluster' | 'f1' | 'matrix'
-  const [crtColor, setCrtColor] = useState('cyan'); // 'cyan' | 'green' | 'amber' | 'red'
+  const [crtColor, setCrtColor] = useState('amber'); // 'amber' (edh.dev default) | 'cyan' | 'green' | 'red'
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [isZoomed, setIsZoomed] = useState(false);
   const [shellInput, setShellInput] = useState('');
   const [shellHistory, setShellHistory] = useState([
     'COMMODORE PET 8296 DEVOPS OS v5.0',
-    'TYPE COMMANDS ON YOUR KEYBOARD ("skills", "projects", "status", "f1", "clear"):',
+    'TYPE COMMANDS ON YOUR KEYBOARD ("skills", "projects", "status", "clear"):',
     ''
   ]);
 
-  const screenModeRef = useRef(screenMode);
-  screenModeRef.current = screenMode;
+  const onEnterPortfolioRef = useRef(onEnterPortfolio);
+  onEnterPortfolioRef.current = onEnterPortfolio;
 
   const crtColorRef = useRef(crtColor);
   crtColorRef.current = crtColor;
-
-  const isZoomedRef = useRef(isZoomed);
-  isZoomedRef.current = isZoomed;
 
   const shellInputRef = useRef(shellInput);
   shellInputRef.current = shellInput;
@@ -81,15 +74,16 @@ export default function RetroComputer3D({ isFullScreenLanding = false }) {
     const container = mountRef.current;
     if (!container) return;
 
-    const width = container.clientWidth || 540;
-    const height = container.clientHeight || 420;
+    let width = container.clientWidth || window.innerWidth;
+    let height = container.clientHeight || window.innerHeight;
 
     // 1. Scene, Camera, Renderer
     const scene = new THREE.Scene();
 
-    const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
-    const defaultCameraPos = new THREE.Vector3(0, 0.35, 6.2);
-    const zoomedCameraPos = new THREE.Vector3(0, 0.55, 3.1);
+    const camera = new THREE.PerspectiveCamera(36, width / height, 0.1, 100);
+    // Framed to showcase the entire 3D computer (monitor + keyboard + chassis + desk shadow)
+    const defaultCameraPos = new THREE.Vector3(0, 0.38, 5.3);
+    const scrolledCameraPos = new THREE.Vector3(0, 0.48, 6.2);
     camera.position.copy(defaultCameraPos);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
@@ -99,10 +93,10 @@ export default function RetroComputer3D({ isFullScreenLanding = false }) {
     renderer.shadowMap.type = THREE.PCFShadowMap;
     container.appendChild(renderer.domElement);
 
-    // 2. Dynamic 2D Canvas for CRT Screen Texture
+    // 2. High-Definition 1024x768 Dynamic 2D Canvas for CRT Screen Texture
     const screenCanvas = document.createElement('canvas');
-    screenCanvas.width = 512;
-    screenCanvas.height = 384;
+    screenCanvas.width = 1024;
+    screenCanvas.height = 768;
     const screenCtx = screenCanvas.getContext('2d');
     const screenTexture = new THREE.CanvasTexture(screenCanvas);
     screenTexture.minFilter = THREE.LinearFilter;
@@ -110,13 +104,13 @@ export default function RetroComputer3D({ isFullScreenLanding = false }) {
 
     // 3. Materials
     const chassisMat = new THREE.MeshStandardMaterial({
-      color: 0x1a2436,
+      color: 0x161e2e,
       roughness: 0.42,
       metalness: 0.28,
     });
 
     const bezelMat = new THREE.MeshStandardMaterial({
-      color: 0x090f1a,
+      color: 0x080d16,
       roughness: 0.65,
       metalness: 0.15,
     });
@@ -127,9 +121,9 @@ export default function RetroComputer3D({ isFullScreenLanding = false }) {
     });
 
     const keyMat = new THREE.MeshStandardMaterial({
-      color: 0x2e3a4e,
-      roughness: 0.48,
-      metalness: 0.22,
+      color: 0x243044,
+      roughness: 0.5,
+      metalness: 0.2,
     });
 
     const redKeyMat = new THREE.MeshStandardMaterial({
@@ -139,7 +133,7 @@ export default function RetroComputer3D({ isFullScreenLanding = false }) {
     });
 
     const cyanKeyMat = new THREE.MeshStandardMaterial({
-      color: 0x00f2fe,
+      color: 0xfdb813,
       roughness: 0.35,
       metalness: 0.35,
     });
@@ -154,26 +148,26 @@ export default function RetroComputer3D({ isFullScreenLanding = false }) {
     const computerGroup = new THREE.Group();
     scene.add(computerGroup);
 
-    // A. Contact Ground Shadow (Soft ambient occlusion beneath computer)
-    const shadowGeo = new THREE.PlaneGeometry(4.2, 3.8);
+    // Contact Ground Shadow
+    const shadowGeo = new THREE.PlaneGeometry(4.8, 4.2);
     const shadowCanvas = document.createElement('canvas');
-    shadowCanvas.width = 128;
-    shadowCanvas.height = 128;
+    shadowCanvas.width = 256;
+    shadowCanvas.height = 256;
     const shadowCtx = shadowCanvas.getContext('2d');
-    const radGrad = shadowCtx.createRadialGradient(64, 64, 10, 64, 64, 60);
-    radGrad.addColorStop(0, 'rgba(0,0,0,0.85)');
-    radGrad.addColorStop(0.5, 'rgba(0,0,0,0.4)');
+    const radGrad = shadowCtx.createRadialGradient(128, 128, 20, 128, 128, 120);
+    radGrad.addColorStop(0, 'rgba(0,0,0,0.92)');
+    radGrad.addColorStop(0.5, 'rgba(0,0,0,0.45)');
     radGrad.addColorStop(1, 'rgba(0,0,0,0)');
     shadowCtx.fillStyle = radGrad;
-    shadowCtx.fillRect(0, 0, 128, 128);
+    shadowCtx.fillRect(0, 0, 256, 256);
     const shadowTex = new THREE.CanvasTexture(shadowCanvas);
-    const shadowMat = new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, opacity: 0.75, depthWrite: false });
+    const shadowMat = new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, opacity: 0.82, depthWrite: false });
     const shadowMesh = new THREE.Mesh(shadowGeo, shadowMat);
     shadowMesh.rotation.x = -Math.PI / 2;
     shadowMesh.position.set(0, -1.18, 0.2);
     computerGroup.add(shadowMesh);
 
-    // B. Base Chassis (Wedge Body)
+    // Base Chassis
     const baseGeo = new THREE.BoxGeometry(3.6, 0.55, 3.2);
     const baseMesh = new THREE.Mesh(baseGeo, chassisMat);
     baseMesh.position.set(0, -0.9, 0.2);
@@ -195,7 +189,7 @@ export default function RetroComputer3D({ isFullScreenLanding = false }) {
       computerGroup.add(foot);
     });
 
-    // C. Keyboard Slanted Deck
+    // Keyboard Slanted Deck
     const deckGeo = new THREE.BoxGeometry(3.4, 0.28, 1.4);
     const deckMesh = new THREE.Mesh(deckGeo, chassisMat);
     deckMesh.position.set(0, -0.73, 1.1);
@@ -204,7 +198,7 @@ export default function RetroComputer3D({ isFullScreenLanding = false }) {
     deckMesh.receiveShadow = true;
     computerGroup.add(deckMesh);
 
-    // D. 3D Keycaps (With Physical Depression Animation Array)
+    // 3D Keycaps
     const keyRows = 4;
     const keyCols = 12;
     const keyGeo = new THREE.BoxGeometry(0.18, 0.12, 0.18);
@@ -216,7 +210,7 @@ export default function RetroComputer3D({ isFullScreenLanding = false }) {
         const isSpace = (r === 3 && c >= 4 && c <= 7);
         const isEsc = (r === 0 && c === 0);
 
-        if (isSpace && c > 4) continue; // single wide spacebar
+        if (isSpace && c > 4) continue;
 
         let kMesh;
         if (isSpace) {
@@ -238,22 +232,19 @@ export default function RetroComputer3D({ isFullScreenLanding = false }) {
       }
     }
 
-    // Trigger Key Press Animation
     keypressAnimationTriggerRef.current = () => {
       const randKey = keyMeshes[Math.floor(Math.random() * keyMeshes.length)];
-      if (randKey) {
-        randKey.userData.depressTimer = 8;
-      }
+      if (randKey) randKey.userData.depressTimer = 8;
     };
 
-    // E. Monitor Hood Enclosure (Sculpted Commodore PET Trapezoid)
+    // Monitor Hood Enclosure
     const hoodGeo = new THREE.BoxGeometry(3.2, 2.3, 2.2);
     const hoodMesh = new THREE.Mesh(hoodGeo, chassisMat);
     hoodMesh.position.set(0, 0.55, -0.2);
     hoodMesh.castShadow = true;
     computerGroup.add(hoodMesh);
 
-    // Rear Ventilation Slits
+    // Ventilation Slits
     for (let s = 0; s < 6; s++) {
       const ventGeo = new THREE.BoxGeometry(2.4, 0.04, 0.04);
       const ventMesh = new THREE.Mesh(ventGeo, bezelMat);
@@ -261,15 +252,14 @@ export default function RetroComputer3D({ isFullScreenLanding = false }) {
       computerGroup.add(ventMesh);
     }
 
-    // F. Monitor Front Bezel
+    // Monitor Front Bezel
     const bezelGeo = new THREE.BoxGeometry(2.9, 2.0, 0.25);
     const bezelMesh = new THREE.Mesh(bezelGeo, bezelMat);
     bezelMesh.position.set(0, 0.55, 0.9);
     computerGroup.add(bezelMesh);
 
-    // G. Curved CRT Screen Surface (Subtly curved cylinder face for authentic CRT glare)
+    // Curved CRT Screen Surface
     const screenGeo = new THREE.PlaneGeometry(2.4, 1.6, 8, 8);
-    // Add subtle spherical bulge
     const posAttr = screenGeo.attributes.position;
     for (let i = 0; i < posAttr.count; i++) {
       const x = posAttr.getX(i);
@@ -283,13 +273,12 @@ export default function RetroComputer3D({ isFullScreenLanding = false }) {
     screenMesh.position.set(0, 0.58, 1.04);
     computerGroup.add(screenMesh);
 
-    // H. Dual Floppy Disk Unit (Commodore 8050 Style)
+    // Dual Floppy Disk Unit
     const driveBayGeo = new THREE.BoxGeometry(1.2, 0.22, 0.1);
     const driveBayMesh = new THREE.Mesh(driveBayGeo, bezelMat);
     driveBayMesh.position.set(-0.85, -0.88, 1.76);
     computerGroup.add(driveBayMesh);
 
-    // Silver Drive Labels
     const labelGeo = new THREE.BoxGeometry(0.3, 0.06, 0.02);
     const label0 = new THREE.Mesh(labelGeo, metallicMat);
     label0.position.set(-1.25, -0.84, 1.82);
@@ -308,10 +297,8 @@ export default function RetroComputer3D({ isFullScreenLanding = false }) {
     slot2Mesh.position.set(-0.75, -0.93, 1.82);
     computerGroup.add(slot2Mesh);
 
-    // Animated Activity LEDs (Drive 0 and Drive 1)
     const ledGeo = new THREE.SphereGeometry(0.032, 16, 16);
-    const driveLedMat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
-    const driveLed1 = new THREE.Mesh(ledGeo, driveLedMat);
+    const driveLed1 = new THREE.Mesh(ledGeo, new THREE.MeshBasicMaterial({ color: 0x10b981 }));
     driveLed1.position.set(-0.35, -0.84, 1.82);
     computerGroup.add(driveLed1);
 
@@ -319,43 +306,47 @@ export default function RetroComputer3D({ isFullScreenLanding = false }) {
     driveLed2.position.set(-0.35, -0.93, 1.82);
     computerGroup.add(driveLed2);
 
-    // I. Front Commodore PET 8296 Aluminum Badge
+    // Front Commodore PET 8296 Aluminum Badge
     const badgeGeo = new THREE.BoxGeometry(1.0, 0.14, 0.02);
     const badgeMesh = new THREE.Mesh(badgeGeo, metallicMat);
     badgeMesh.position.set(0.85, -0.88, 1.78);
     computerGroup.add(badgeMesh);
 
-    // 5. Studio 3-Point Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+    // 5. Studio Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0x00f2fe, 1.9);
+    const keyLight = new THREE.DirectionalLight(0xffb000, 1.9);
     keyLight.position.set(4, 5, 4);
     keyLight.castShadow = true;
     scene.add(keyLight);
 
-    const fillLight = new THREE.DirectionalLight(0xff1801, 1.3);
+    const fillLight = new THREE.DirectionalLight(0x00f2fe, 1.3);
     fillLight.position.set(-4, 3, 2);
     scene.add(fillLight);
 
-    const topRimLight = new THREE.DirectionalLight(0xffffff, 0.9);
+    const topRimLight = new THREE.DirectionalLight(0xffffff, 1.0);
     topRimLight.position.set(0, 6, -3);
     scene.add(topRimLight);
 
-    const screenGlowLight = new THREE.PointLight(0x00f2fe, 1.8, 3.8);
+    const screenGlowLight = new THREE.PointLight(0xffb000, 2.2, 4.2);
     screenGlowLight.position.set(0, 0.6, 1.3);
     scene.add(screenGlowLight);
 
     // 6. Interactive 3D Orbit Drag & Inertia Physics Controls
     let isDragging = false;
     let previousMousePos = { x: 0, y: 0 };
+    let mouseDownPos = { x: 0, y: 0 };
+    let mouseDownTime = 0;
     let angularVelocity = { x: 0, y: 0 };
-    let currentRotation = { x: 0.06, y: -0.15 };
+    let currentRotation = { x: 0.06, y: -0.12 }; // Default perspective showing the full body
     let mouseParallax = { x: 0, y: 0 };
 
     const onMouseDown = (e) => {
       isDragging = true;
       previousMousePos = { x: e.clientX, y: e.clientY };
+      mouseDownPos = { x: e.clientX, y: e.clientY };
+      mouseDownTime = Date.now();
       angularVelocity = { x: 0, y: 0 };
     };
 
@@ -363,7 +354,7 @@ export default function RetroComputer3D({ isFullScreenLanding = false }) {
       const rect = container.getBoundingClientRect();
       const normX = (e.clientX - rect.left) / rect.width - 0.5;
       const normY = (e.clientY - rect.top) / rect.height - 0.5;
-      mouseParallax = { x: normX * 0.35, y: normY * 0.25 };
+      mouseParallax = { x: normX * 0.28, y: normY * 0.20 };
 
       if (!isDragging) return;
 
@@ -380,15 +371,29 @@ export default function RetroComputer3D({ isFullScreenLanding = false }) {
       previousMousePos = { x: e.clientX, y: e.clientY };
     };
 
-    const onMouseUp = () => {
+    const onMouseUp = (e) => {
       isDragging = false;
+      const dist = Math.hypot(e.clientX - mouseDownPos.x, e.clientY - mouseDownPos.y);
+      const duration = Date.now() - mouseDownTime;
+      // Quick click without drag triggers portfolio transition
+      if (dist < 10 && duration < 500) {
+        playKeyClick(true);
+        if (onEnterPortfolioRef.current) {
+          onEnterPortfolioRef.current();
+        }
+      }
     };
 
-    // Touch controls for mobile/tablet
+    // Touch controls
+    let touchStartPos = { x: 0, y: 0 };
+    let touchStartTime = 0;
+
     const onTouchStart = (e) => {
       if (e.touches.length === 1) {
         isDragging = true;
         previousMousePos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        touchStartPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        touchStartTime = Date.now();
         angularVelocity = { x: 0, y: 0 };
       }
     };
@@ -408,8 +413,19 @@ export default function RetroComputer3D({ isFullScreenLanding = false }) {
       previousMousePos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     };
 
-    const onTouchEnd = () => {
+    const onTouchEnd = (e) => {
       isDragging = false;
+      if (e.changedTouches && e.changedTouches.length > 0) {
+        const t = e.changedTouches[0];
+        const dist = Math.hypot(t.clientX - touchStartPos.x, t.clientY - touchStartPos.y);
+        const duration = Date.now() - touchStartTime;
+        if (dist < 14 && duration < 500) {
+          playKeyClick(true);
+          if (onEnterPortfolioRef.current) {
+            onEnterPortfolioRef.current();
+          }
+        }
+      }
     };
 
     container.addEventListener('mousedown', onMouseDown);
@@ -420,7 +436,7 @@ export default function RetroComputer3D({ isFullScreenLanding = false }) {
     window.addEventListener('touchmove', onTouchMove, { passive: true });
     window.addEventListener('touchend', onTouchEnd);
 
-    // Global Keydown Listener (typing directly on physical keyboard animates 3D PET keys)
+    // Global Keydown Listener
     const handleGlobalKeyDown = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
@@ -430,96 +446,67 @@ export default function RetroComputer3D({ isFullScreenLanding = false }) {
 
       if (e.key === 'Enter') {
         playKeyClick(true);
-        if (screenModeRef.current === 'shell') {
-          const cmd = shellInputRef.current.trim().toLowerCase();
-          const newHist = [...shellHistoryRef.current, `devops@GrayViper:~$ ${shellInputRef.current}`];
-
-          if (cmd === 'help') {
-            newHist.push('COMMANDS: skills, projects, status, f1, whoami, clear');
-          } else if (cmd === 'skills') {
-            newHist.push('STACK: Kubernetes, Docker, Terraform, FastAPI, Next.js');
-          } else if (cmd === 'projects') {
-            newHist.push('REPOS: Career_Genie, hi_links, Cura-AI-Health');
-          } else if (cmd === 'status') {
-            newHist.push('STATUS: 100% Cluster Health · 99.9% Uptime · 6/6 Pods');
-          } else if (cmd === 'f1') {
-            newHist.push('F1 SPEED: 328 km/h · DRS OPEN · 1.82s Pitstop Deploy');
-          } else if (cmd === 'whoami') {
-            newHist.push('USER: Chakka Chinni Krishna (@GrayViper) · LPU B.Tech CSE');
-          } else if (cmd === 'clear') {
-            setShellHistory(['COMMODORE PET 8296 DEVOPS OS v5.0', '']);
-            setShellInput('');
-            return;
-          } else if (cmd) {
-            newHist.push(`COMMAND EXECUTED: "${cmd}"`);
+        const cmd = shellInputRef.current.trim().toLowerCase();
+        if (!cmd || cmd === 'enter' || cmd === 'start' || cmd === 'portfolio' || cmd === 'scroll') {
+          if (onEnterPortfolioRef.current) {
+            onEnterPortfolioRef.current();
           }
-
-          setShellHistory(newHist);
+        } else if (cmd === 'help') {
+          setShellHistory(prev => [...prev, 'COMMANDS: skills, projects, status, certs, enter, clear']);
+          setShellInput('');
+        } else if (cmd === 'skills') {
+          setShellHistory(prev => [...prev, 'STACK: AWS (EKS), Kubernetes, Docker, Terraform, FastAPI, Next.js']);
+          setShellInput('');
+        } else if (cmd === 'projects') {
+          setShellHistory(prev => [...prev, 'PROJECTS: Career_Genie, hi_links, Cura-AI-Health']);
+          setShellInput('');
+        } else if (cmd === 'status') {
+          setShellHistory(prev => [...prev, 'STATUS: 100% Cluster Health · 99.9% Uptime']);
+          setShellInput('');
+        } else if (cmd === 'clear') {
+          setShellHistory(['COMMODORE PET 8296 DEVOPS OS v5.0', '']);
+          setShellInput('');
+        } else {
+          setShellHistory(prev => [...prev, `devops@GrayViper:~$ ${shellInputRef.current}`, `Executed: "${cmd}"`]);
           setShellInput('');
         }
       } else if (e.key === 'Backspace') {
         playKeyClick(false);
-        if (screenModeRef.current === 'shell') {
-          setShellInput(prev => prev.slice(0, -1));
-        }
+        setShellInput(prev => prev.slice(0, -1));
       } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
         playKeyClick(false);
-        if (screenModeRef.current === 'shell') {
-          setShellInput(prev => prev + e.key);
-        }
+        setShellInput(prev => prev + e.key);
       }
     };
 
     window.addEventListener('keydown', handleGlobalKeyDown);
 
-    // Recenter view function
+    // Recenter view
     recenterCameraRef.current = () => {
-      currentRotation = { x: 0.06, y: -0.15 };
+      currentRotation = { x: 0.06, y: -0.12 };
       angularVelocity = { x: 0, y: 0 };
     };
 
-    // 7. Dynamic CRT Screen Content Drawing Loop
+    // 7. Dynamic 1024x768 High-Definition CRT Screen Drawing Loop
     let tick = 0;
-
-    const telemetryLines = [
-      '> COMMODORE PET 8296 DEVOPS OS [ONLINE]',
-      '> OPERATOR: CHINNI KRISHNA (@GrayViper)',
-      '> ORCHESTRATION: AWS EKS 1.30 (ACTIVE)',
-      '> GITOPS: ARGOCD SYNCHRONIZED [1.82s SLA]',
-      '> CI/CD: GITHUB ACTIONS PIPELINES (99.9%)',
-      '> BACKEND: FASTAPI REST + MONGODB ATLAS',
-      '> AGENTIC AI: MULTI-AGENT WORKFLOWS (XEBIA)',
-      '> READY FOR COMMAND INPUT...'
-    ];
-
-    const clusterNodes = [
-      'NODE-EKS-01 [READY] 2.4GHz / 8GB RAM',
-      'NODE-EKS-02 [READY] 2.4GHz / 8GB RAM',
-      'POD-CAREER-GENIE [RUNNING] 100% HEALTH',
-      'POD-HI-LINKS-WEB [RUNNING] 100% HEALTH',
-      'POD-CURA-AI-SVC [RUNNING] 100% HEALTH',
-      'INGRESS-ALB [HEALTHY] 0 DOWNTIME'
-    ];
-
-    const matrixChars = '01010110 K8S DOCKER TF AWS NEXT FASTAPI REPO GITHUB 01';
 
     const renderScreen = () => {
       tick++;
 
       // Color Theme Palette
       const colorScheme = crtColorRef.current;
-      let primaryColor = '#00f2fe';
-      let secondaryColor = '#ff1801';
+      let primaryColor = '#ffb000'; // Amber gold default
+      let secondaryColor = '#00f2fe';
       let accentColor = '#10b981';
 
-      if (colorScheme === 'green') {
+      if (colorScheme === 'cyan') {
+        primaryColor = '#00f2fe';
+        secondaryColor = '#ff1801';
+        accentColor = '#10b981';
+      } else if (colorScheme === 'green') {
         primaryColor = '#10b981';
         secondaryColor = '#4ade80';
         accentColor = '#22c55e';
-      } else if (colorScheme === 'amber') {
-        primaryColor = '#fdb813';
-        secondaryColor = '#ff8800';
-        accentColor = '#fbbf24';
       } else if (colorScheme === 'red') {
         primaryColor = '#ff1801';
         secondaryColor = '#fdb813';
@@ -527,128 +514,102 @@ export default function RetroComputer3D({ isFullScreenLanding = false }) {
       }
 
       screenGlowLight.color.set(primaryColor);
+      keyLight.color.set(primaryColor);
 
-      // Clear Screen with Retro Dark CRT Background
-      screenCtx.fillStyle = '#03060f';
-      screenCtx.fillRect(0, 0, 512, 384);
+      // Clear Screen with Vintage CRT Obsidian
+      screenCtx.fillStyle = '#02050b';
+      screenCtx.fillRect(0, 0, 1024, 768);
 
       // CRT Scanlines
-      screenCtx.fillStyle = 'rgba(0, 242, 254, 0.04)';
-      for (let y = 0; y < 384; y += 4) {
-        screenCtx.fillRect(0, y, 512, 1.5);
+      screenCtx.fillStyle = `${primaryColor}0d`;
+      for (let y = 0; y < 768; y += 8) {
+        screenCtx.fillRect(0, y, 1024, 3);
       }
 
-      // CRT Curved Screen Vignette & Border
-      screenCtx.strokeStyle = `${primaryColor}40`;
-      screenCtx.lineWidth = 6;
-      screenCtx.strokeRect(8, 8, 496, 368);
+      // CRT Curved Screen Vignette & Outer Border
+      screenCtx.strokeStyle = `${primaryColor}45`;
+      screenCtx.lineWidth = 10;
+      screenCtx.strokeRect(16, 16, 992, 736);
 
-      const mode = screenModeRef.current;
+      // Top Vintage Header Bar
+      screenCtx.fillStyle = `${primaryColor}30`;
+      screenCtx.fillRect(28, 28, 968, 56);
+      screenCtx.fillStyle = primaryColor;
+      screenCtx.font = 'bold 24px "Fira Code", monospace';
+      screenCtx.fillText('*** COMMODORE PET 8296 DEVOPS OS // 64K RAM ***', 48, 65);
 
-      if (mode === 'telemetry') {
-        // Screen Header Bar
-        screenCtx.fillStyle = `${primaryColor}25`;
-        screenCtx.fillRect(14, 14, 484, 32);
+      // Basic Operator Bio (Left Side) - Large & High Contrast
+      screenCtx.font = '22px "Fira Code", monospace';
+      screenCtx.fillStyle = accentColor;
+      screenCtx.fillText('64K RAM SYSTEM  38911 BYTES FREE', 48, 126);
+
+      screenCtx.fillStyle = '#ffffff';
+      screenCtx.font = 'bold 26px "Fira Code", monospace';
+      screenCtx.fillText('OPERATOR : CHAKKA CHINNI KRISHNA', 48, 172);
+
+      screenCtx.font = '22px "Fira Code", monospace';
+      screenCtx.fillStyle = primaryColor;
+      screenCtx.fillText('HANDLE   : @GrayViper', 48, 218);
+      screenCtx.fillText('ROLE     : DevOps Engineer & Full-Stack Specialist', 48, 264);
+
+      screenCtx.fillStyle = '#cbd5e1';
+      screenCtx.fillText('ACADEMIC : B.Tech CSE @ LPU (CGPA: 7.2)', 48, 310);
+      screenCtx.fillText('CLOUD/IaC: AWS (EKS) · Kubernetes · Terraform', 48, 356);
+      screenCtx.fillText('CI/CD/OS : GitHub Actions · Docker · Linux/Bash', 48, 402);
+      screenCtx.fillText('STACK    : FastAPI · Next.js · TypeScript · Mongo', 48, 448);
+      screenCtx.fillText('AGENTIC  : Multi-Agent Workflows & LLMs (Xebia)', 48, 494);
+
+      screenCtx.fillStyle = accentColor;
+      screenCtx.fillText('STATUS   : ALL SYSTEMS ONLINE · 99.9% CLUSTER UPTIME', 48, 540);
+
+      // ASCII Dithered Tech Badge (Right Side)
+      screenCtx.fillStyle = `${primaryColor}80`;
+      screenCtx.font = '18px "Fira Code", monospace';
+      const asciiArt = [
+        '┌─────────────────┐',
+        '│   [CK-DEVOPS]   │',
+        '│   AWS  ·  EKS   │',
+        '│   ☸️  🐳  ⚡  🚀 │',
+        '│   GITOPS 100%   │',
+        '└─────────────────┘'
+      ];
+      asciiArt.forEach((line, idx) => {
+        screenCtx.fillText(line, 730, 160 + idx * 28);
+      });
+
+      // Interactive Shell Input Prompt
+      screenCtx.fillStyle = primaryColor;
+      screenCtx.font = 'bold 24px "Fira Code", monospace';
+      screenCtx.fillText(`devops@GrayViper:~$ ${shellInputRef.current}`, 48, 600);
+
+      if (Math.floor(tick / 15) % 2 === 0) {
+        const textWidth = screenCtx.measureText(`devops@GrayViper:~$ ${shellInputRef.current}`).width;
+        screenCtx.fillRect(52 + textWidth, 576, 16, 28);
+      }
+
+      // Blinking Scroll / Enter Invitation Bar (Bottom CRT)
+      screenCtx.fillStyle = `${primaryColor}22`;
+      screenCtx.fillRect(28, 638, 968, 88);
+      screenCtx.strokeStyle = primaryColor;
+      screenCtx.lineWidth = 2.5;
+      screenCtx.strokeRect(28, 638, 968, 88);
+
+      if (Math.floor(tick / 18) % 2 === 0) {
         screenCtx.fillStyle = primaryColor;
-        screenCtx.font = 'bold 15px "Fira Code", monospace';
-        screenCtx.fillText('🏁 DEVOPS & FULL-STACK TELEMETRY HUD', 24, 36);
-
-        screenCtx.font = '14px "Fira Code", monospace';
-        const visibleLines = Math.min(telemetryLines.length, Math.floor(tick / 16) + 1);
-
-        for (let i = 0; i < visibleLines; i++) {
-          const yPos = 76 + i * 28;
-          if (i === 0) screenCtx.fillStyle = accentColor;
-          else if (i === 1) screenCtx.fillStyle = secondaryColor;
-          else if (i === 2) screenCtx.fillStyle = primaryColor;
-          else screenCtx.fillStyle = '#cbd5e1';
-
-          screenCtx.fillText(telemetryLines[i], 24, yPos);
-        }
-
-        if (Math.floor(tick / 15) % 2 === 0) {
-          screenCtx.fillStyle = primaryColor;
-          const cursorY = 76 + Math.min(visibleLines, telemetryLines.length - 1) * 28;
-          screenCtx.fillRect(470, cursorY - 12, 10, 15);
-        }
-      } else if (mode === 'cluster') {
-        screenCtx.fillStyle = `${primaryColor}25`;
-        screenCtx.fillRect(14, 14, 484, 32);
-        screenCtx.fillStyle = primaryColor;
-        screenCtx.font = 'bold 15px "Fira Code", monospace';
-        screenCtx.fillText('☸️ KUBERNETES CLUSTER & POD TOPOLOGY', 24, 36);
-
-        screenCtx.font = '13px "Fira Code", monospace';
-        for (let i = 0; i < clusterNodes.length; i++) {
-          screenCtx.fillStyle = accentColor;
-          screenCtx.fillText(`✔ ${clusterNodes[i]}`, 24, 80 + i * 32);
-        }
-
-        screenCtx.fillStyle = secondaryColor;
-        screenCtx.fillText('> ALL 6/6 MICROSERVICES HEALTHY', 24, 300);
-      } else if (mode === 'f1') {
-        screenCtx.fillStyle = 'rgba(255, 24, 1, 0.25)';
-        screenCtx.fillRect(14, 14, 484, 32);
-        screenCtx.fillStyle = '#ff1801';
-        screenCtx.font = 'bold 15px "Fira Code", monospace';
-        screenCtx.fillText('🏎️ ORACLE RED BULL TELEMETRY FEED', 24, 36);
-
-        screenCtx.fillStyle = '#fff';
-        screenCtx.font = 'bold 36px "Fira Code", monospace';
-        screenCtx.fillText('328 KM/H', 24, 110);
-
-        screenCtx.fillStyle = primaryColor;
-        screenCtx.font = '14px "Fira Code", monospace';
-        screenCtx.fillText('GEAR: 7 | RPM: 11,400 | DRS: ACTIVE', 24, 150);
-        screenCtx.fillText('PITSTOP DEPLOYMENT SLA: 1.82s', 24, 185);
-        screenCtx.fillText('PROMETHEUS SCRAPING: 60 FPS', 24, 220);
-        screenCtx.fillText('DRIVER: @GrayViper (CHINNI KRISHNA)', 24, 255);
-      } else if (mode === 'matrix') {
-        screenCtx.fillStyle = accentColor;
-        screenCtx.font = '13px "Fira Code", monospace';
-        screenCtx.fillText('// STREAMING LIVE CLOUD LOGS...', 24, 40);
-        for (let r = 0; r < 10; r++) {
-          const text = matrixChars.substring((tick + r * 5) % 30, (tick + r * 5) % 30 + 26);
-          screenCtx.fillStyle = r % 2 === 0 ? accentColor : primaryColor;
-          screenCtx.fillText(`> [LOG_${r + 100}] ${text}`, 24, 75 + r * 28);
-        }
       } else {
-        // Direct Interactive Shell Mode
-        screenCtx.fillStyle = `${primaryColor}25`;
-        screenCtx.fillRect(14, 14, 484, 32);
-        screenCtx.fillStyle = primaryColor;
-        screenCtx.font = 'bold 15px "Fira Code", monospace';
-        screenCtx.fillText('💻 DIRECT KEYBOARD SHELL (TYPE ANYWHERE)', 24, 36);
-
-        const history = shellHistoryRef.current;
-        screenCtx.font = '13px "Fira Code", monospace';
-
-        const maxShow = 7;
-        const startIdx = Math.max(0, history.length - maxShow);
-
-        for (let i = startIdx; i < history.length; i++) {
-          screenCtx.fillStyle = '#94a3b8';
-          screenCtx.fillText(history[i], 24, 76 + (i - startIdx) * 26);
-        }
-
-        const promptY = 76 + Math.min(history.length - startIdx, maxShow) * 26;
-        screenCtx.fillStyle = primaryColor;
-        screenCtx.fillText(`devops@GrayViper:~$ ${shellInputRef.current}`, 24, promptY);
-
-        if (Math.floor(tick / 15) % 2 === 0) {
-          const textWidth = screenCtx.measureText(`devops@GrayViper:~$ ${shellInputRef.current}`).width;
-          screenCtx.fillRect(26 + textWidth, promptY - 12, 9, 15);
-        }
+        screenCtx.fillStyle = '#ffffff';
       }
+      screenCtx.font = 'bold 23px "Fira Code", monospace';
+      screenCtx.fillText('▶ SCROLL DOWN OR CLICK TO ENTER PORTFOLIO █', 120, 692);
 
       screenTexture.needsUpdate = true;
 
-      // Animate Drive LED activity blink
-      if (tick % 20 === 0) {
+      // Animate Activity LED
+      if (tick % 24 === 0) {
         driveLed1.material.color.set(Math.random() > 0.35 ? 0x10b981 : 0x053018);
       }
 
-      // Animate 3D physical keycap depression bounce
+      // Animate Key Depression
       keyMeshes.forEach(k => {
         if (k.userData.depressTimer > 0) {
           k.userData.depressTimer--;
@@ -659,12 +620,12 @@ export default function RetroComputer3D({ isFullScreenLanding = false }) {
       });
     };
 
-    // 8. Main Render Loop with Physics Inertia Damping & Camera Zoom Lerp
+    // 8. Main Render Loop
     let animationFrameId;
     const animate = () => {
       renderScreen();
 
-      // Inertia decay when not dragging
+      // Inertia decay
       if (!isDragging) {
         angularVelocity.x *= 0.94;
         angularVelocity.y *= 0.94;
@@ -672,17 +633,20 @@ export default function RetroComputer3D({ isFullScreenLanding = false }) {
         currentRotation.y += angularVelocity.y;
       }
 
-      // Smooth camera zoom transition
-      const targetCamPos = isZoomedRef.current ? zoomedCameraPos : defaultCameraPos;
+      // Calculate scroll progress (0 to 1 over first 450px of window scroll)
+      const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+      const scrollProgress = Math.min(1, Math.max(0, scrollY / 450));
+
+      const targetCamPos = new THREE.Vector3();
+      targetCamPos.lerpVectors(defaultCameraPos, scrolledCameraPos, scrollProgress);
       camera.position.lerp(targetCamPos, 0.08);
 
-      // Auto idle sway + parallax
-      const effectiveRotY = currentRotation.y + mouseParallax.x + (isDragging || isZoomedRef.current ? 0 : Math.sin(tick * 0.015) * 0.035);
+      const effectiveRotY = currentRotation.y + mouseParallax.x + (isDragging ? 0 : Math.sin(tick * 0.015) * 0.02);
       const effectiveRotX = currentRotation.x - mouseParallax.y;
 
       computerGroup.rotation.y += (effectiveRotY - computerGroup.rotation.y) * 0.08;
       computerGroup.rotation.x += (effectiveRotX - computerGroup.rotation.x) * 0.08;
-      computerGroup.position.y = -0.08 + Math.sin(tick * 0.025) * 0.04;
+      computerGroup.position.y = -0.06 + Math.sin(tick * 0.02) * 0.025;
 
       renderer.render(scene, camera);
       animationFrameId = requestAnimationFrame(animate);
@@ -693,11 +657,11 @@ export default function RetroComputer3D({ isFullScreenLanding = false }) {
     // 9. Resize Handler
     const handleResize = () => {
       if (!container) return;
-      const newWidth = container.clientWidth || 540;
-      const newHeight = container.clientHeight || 420;
-      camera.aspect = newWidth / newHeight;
+      width = container.clientWidth || window.innerWidth;
+      height = container.clientHeight || window.innerHeight;
+      camera.aspect = width / height;
       camera.updateProjectionMatrix();
-      renderer.setSize(newWidth, newHeight);
+      renderer.setSize(width, height);
     };
 
     window.addEventListener('resize', handleResize);
@@ -720,202 +684,103 @@ export default function RetroComputer3D({ isFullScreenLanding = false }) {
     };
   }, []);
 
-  const handleModeChange = (mode) => {
-    playKeyClick();
-    setScreenMode(mode);
-  };
-
-  const handleColorChange = (color) => {
-    playKeyClick();
-    setCrtColor(color);
-  };
-
-  const toggleZoom = () => {
-    playKeyClick();
-    setIsZoomed(!isZoomed);
-  };
-
   return (
-    <div className="glass-card-web" style={{
-      padding: '24px',
-      borderRadius: '24px',
+    <div style={{
+      width: '100%',
+      height: '100%',
       position: 'relative',
       overflow: 'hidden'
     }}>
-      {/* Top Header Bar & Controls */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: '14px',
-        flexWrap: 'wrap',
-        gap: '10px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span className="section-tag" style={{ fontSize: '0.72rem', padding: '3px 10px' }}>
-            🖥️ COMMODORE PET 8296 (EDH.DEV 3D)
-          </span>
-          <span style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--cyber-cyan)' }}>
-            THREE.JS INTERACTIVE
-          </span>
-        </div>
-
-        {/* Phosphor Colors & Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          {/* Phosphor Color Selector */}
-          <div style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.05)', padding: '3px 6px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
-            {[
-              { id: 'cyan', color: '#00f2fe' },
-              { id: 'green', color: '#10b981' },
-              { id: 'amber', color: '#fdb813' },
-              { id: 'red', color: '#ff1801' }
-            ].map(c => (
-              <button
-                key={c.id}
-                onClick={() => handleColorChange(c.id)}
-                style={{
-                  width: '14px',
-                  height: '14px',
-                  borderRadius: '50%',
-                  background: c.color,
-                  border: crtColor === c.id ? '2px solid #fff' : 'none',
-                  cursor: 'pointer',
-                  padding: 0
-                }}
-                title={`${c.id} phosphor CRT mode`}
-              />
-            ))}
-          </div>
-
-          {/* Zoom / Inspect Screen Button */}
-          <button
-            onClick={toggleZoom}
-            style={{
-              background: isZoomed ? 'var(--f1-red)' : 'rgba(255,255,255,0.05)',
-              border: `1px solid ${isZoomed ? 'var(--f1-red)' : 'var(--border-subtle)'}`,
-              color: '#fff',
-              borderRadius: '8px',
-              padding: '5px 8px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              fontSize: '0.7rem',
-              fontFamily: 'var(--font-mono)'
-            }}
-            title={isZoomed ? 'Zoom Out to Full Computer' : 'Inspect Screen Up Close'}
-          >
-            {isZoomed ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
-            <span>{isZoomed ? 'Zoom Out' : 'Inspect'}</span>
-          </button>
-
-          {/* Sound Toggle */}
-          <button
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            style={{
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid var(--border-subtle)',
-              color: soundEnabled ? 'var(--cyber-cyan)' : 'var(--text-dim)',
-              borderRadius: '8px',
-              padding: '5px 8px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center'
-            }}
-            title={soundEnabled ? 'Mute Key Clicks' : 'Enable Key Clicks'}
-          >
-            {soundEnabled ? <Volume2 size={13} /> : <VolumeX size={13} />}
-          </button>
-
-          {/* Recenter 3D View */}
-          <button
-            onClick={() => recenterCameraRef.current && recenterCameraRef.current()}
-            style={{
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid var(--border-subtle)',
-              color: 'var(--text-dim)',
-              borderRadius: '8px',
-              padding: '5px 8px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              fontSize: '0.7rem',
-              fontFamily: 'var(--font-mono)'
-            }}
-            title="Reset 3D camera angle"
-          >
-            <RefreshCw size={12} />
-          </button>
-        </div>
-      </div>
-
       {/* 3D WebGL Canvas Viewport */}
       <div
         ref={mountRef}
         style={{
           width: '100%',
-          height: isFullScreenLanding ? 'clamp(400px, 54vh, 580px)' : '440px',
-          cursor: 'grab',
+          height: '100%',
+          cursor: isFullScreenLanding ? 'pointer' : 'grab',
           position: 'relative',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           userSelect: 'none'
         }}
-        title="Click and drag to rotate the 3D computer in 360°!"
+        title="Click to enter portfolio, or drag to rotate 3D computer in 360°!"
       />
 
-      {/* Screen Mode Tabs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px', marginTop: '12px' }}>
-        {[
-          { id: 'telemetry', label: 'Telemetry', icon: <Terminal size={12} /> },
-          { id: 'shell', label: 'Shell (Type)', icon: <Activity size={12} /> },
-          { id: 'cluster', label: 'Cluster', icon: <Cpu size={12} /> },
-          { id: 'f1', label: 'F1 Speed', icon: <Zap size={12} /> },
-          { id: 'matrix', label: 'Logs', icon: <Sparkles size={12} /> }
-        ].map(btn => (
-          <button
-            key={btn.id}
-            onClick={() => handleModeChange(btn.id)}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '4px',
-              background: screenMode === btn.id ? 'var(--f1-red)' : 'rgba(255,255,255,0.04)',
-              color: screenMode === btn.id ? '#fff' : 'var(--text-dim)',
-              border: `1px solid ${screenMode === btn.id ? 'var(--f1-red)' : 'var(--border-subtle)'}`,
-              padding: '7px 0',
-              borderRadius: '8px',
-              fontSize: '0.72rem',
-              fontFamily: 'var(--font-mono)',
-              fontWeight: '700',
-              cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
-          >
-            {btn.icon} {btn.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Footer Instruction Hint */}
+      {/* Floating Minimalist Ambient Controls (Bottom Right Corner) */}
       <div style={{
+        position: 'absolute',
+        right: '24px',
+        bottom: '24px',
+        zIndex: 30,
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        marginTop: '12px',
-        paddingTop: '12px',
-        borderTop: '1px solid var(--border-subtle)',
-        fontSize: '0.74rem',
-        fontFamily: 'var(--font-mono)',
-        color: 'var(--text-dim)'
+        gap: '8px',
+        background: 'rgba(7, 10, 18, 0.75)',
+        backdropFilter: 'blur(16px)',
+        border: '1px solid var(--border-subtle)',
+        borderRadius: '12px',
+        padding: '6px 10px',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6)'
       }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <Move3d size={13} color="var(--cyber-cyan)" /> Drag to spin 3D model · Type on keyboard to interact
-        </span>
-        <span style={{ color: 'var(--terminal-green)', fontWeight: '700' }}>● THREE.JS 3D WEBGL</span>
+        {/* Phosphor Color Selector */}
+        <div style={{ display: 'flex', gap: '5px', paddingRight: '6px', borderRight: '1px solid var(--border-subtle)' }}>
+          {[
+            { id: 'amber', color: '#ffb000', label: 'Amber Phosphor' },
+            { id: 'cyan', color: '#00f2fe', label: 'Cyan Phosphor' },
+            { id: 'green', color: '#10b981', label: 'Green Phosphor' },
+            { id: 'red', color: '#ff1801', label: 'Red Phosphor' }
+          ].map(c => (
+            <button
+              key={c.id}
+              onClick={() => { playKeyClick(); setCrtColor(c.id); }}
+              style={{
+                width: '14px',
+                height: '14px',
+                borderRadius: '50%',
+                background: c.color,
+                border: crtColor === c.id ? '2px solid #fff' : 'none',
+                cursor: 'pointer',
+                padding: 0
+              }}
+              title={c.label}
+            />
+          ))}
+        </div>
+
+        {/* Sound Toggle */}
+        <button
+          onClick={() => setSoundEnabled(!soundEnabled)}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: soundEnabled ? 'var(--cyber-cyan)' : 'var(--text-dim)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            padding: '2px'
+          }}
+          title={soundEnabled ? 'Mute Mechanical Key Clicks' : 'Enable Key Clicks'}
+        >
+          {soundEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
+        </button>
+
+        {/* Recenter 3D View */}
+        <button
+          onClick={() => recenterCameraRef.current && recenterCameraRef.current()}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: 'var(--text-dim)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            padding: '2px'
+          }}
+          title="Reset 3D camera angle"
+        >
+          <RefreshCw size={13} />
+        </button>
       </div>
     </div>
   );

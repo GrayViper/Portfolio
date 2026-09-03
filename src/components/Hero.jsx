@@ -1,15 +1,13 @@
-import React, { useState } from 'react';
-import { ArrowDown, ArrowRight, Github, Linkedin, Mail, Zap, Terminal as TerminalIcon, ShieldCheck, Activity, Layers, Sparkles, ChevronDown, Monitor } from 'lucide-react';
+import React from 'react';
+import { ChevronDown, ArrowDown } from 'lucide-react';
 import RetroComputer3D from './RetroComputer3D';
 
 /**
- * Hero Component - Full-Screen 3D Retro Computer Landing Stage
- * Inspired by edh.dev (Commodore PET 8296)
+ * Hero Component - edh.dev Authentic 3D Retro Stage
  * Features:
- * - 100vh Fullscreen 3D Retro Computer experience on page load
- * - Retro Commodore Basic HUD & vintage CRT overlays
- * - Interactive 360° mouse drag, direct keyboard typing & phosphor modes
- * - Smooth "ENTER PORTFOLIO" transition into the rest of the site
+ * - Edge-to-edge full-viewport 3D canvas (Zero box frames or cards)
+ * - Starts in tight close-up on CRT monitor, zooming out smoothly to full 3D computer on scroll
+ * - Blinking minimal scroll-to-enter hint
  */
 export default function Hero() {
   const handleEnterPortfolio = (e) => {
@@ -23,162 +21,73 @@ export default function Hero() {
   return (
     <section id="hero" style={{
       width: '100vw',
-      minHeight: '100vh',
+      height: '100vh',
       position: 'relative',
+      overflow: 'hidden',
       display: 'flex',
       flexDirection: 'column',
-      justifyContent: 'space-between',
+      justifyContent: 'center',
       alignItems: 'center',
-      padding: '75px 20px 24px',
-      boxSizing: 'border-box',
-      overflow: 'hidden'
+      background: 'transparent'
     }}>
-
-      {/* Top Retro HUD Bar */}
+      {/* Edge-to-Edge 3D Commodore PET Computer Canvas */}
       <div style={{
-        width: '100%',
-        maxWidth: '1280px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '12px',
-        zIndex: 20
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 10
       }}>
-        {/* Vintage Commodore PET Header */}
-        <div style={{
-          background: 'rgba(7, 10, 18, 0.85)',
-          backdropFilter: 'blur(16px)',
-          border: '1px solid rgba(0, 242, 254, 0.3)',
-          borderRadius: '12px',
-          padding: '6px 14px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px'
-        }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981' }} />
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem', color: 'var(--cyber-cyan)', fontWeight: '700' }}>
-            *** COMMODORE PET 8296 DEVOPS OS // 64K RAM READY ***
-          </span>
-        </div>
-
-        {/* Developer Bio Tag */}
-        <div style={{
-          background: 'rgba(7, 10, 18, 0.85)',
-          backdropFilter: 'blur(16px)',
-          border: '1px solid rgba(255, 24, 1, 0.3)',
-          borderRadius: '12px',
-          padding: '6px 14px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          fontFamily: 'var(--font-mono)',
-          fontSize: '0.76rem'
-        }}>
-          <span style={{ color: '#fff' }}>
-            OPERATOR: <strong style={{ color: 'var(--f1-red)' }}>CHINNI KRISHNA</strong> (@GrayViper)
-          </span>
-          <span style={{ color: 'var(--text-dim)' }}>|</span>
-          <span style={{ color: 'var(--terminal-green)' }}>B.TECH CSE @ LPU (CGPA 7.2)</span>
-        </div>
+        <RetroComputer3D isFullScreenLanding={true} onEnterPortfolio={handleEnterPortfolio} />
       </div>
 
-      {/* Centerpiece: Full-Screen 3D Retro Computer Stage */}
-      <div style={{
-        width: '100%',
-        maxWidth: '1200px',
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        position: 'relative',
-        zIndex: 10,
-        margin: '10px 0'
-      }}>
-        <RetroComputer3D isFullScreenLanding={true} />
-      </div>
-
-      {/* Bottom Retro Navigation & "ENTER PORTFOLIO" Action Bar */}
-      <div style={{
-        width: '100%',
-        maxWidth: '1280px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '14px',
-        zIndex: 20
-      }}>
-        {/* Main Glowing "ENTER PORTFOLIO" Action Button */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <button
-            onClick={handleEnterPortfolio}
-            className="btn-primary"
-            style={{
-              padding: '14px 36px',
-              fontSize: '1rem',
-              letterSpacing: '0.04em',
-              boxShadow: '0 8px 30px var(--f1-red-glow)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px'
-            }}
-          >
-            <span>▶ ENTER FULL PORTFOLIO</span>
-            <ArrowDown size={18} className="animate-bounce" />
-          </button>
-
-          {/* Social Links */}
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <a href="https://github.com/GrayViper" target="_blank" rel="noreferrer" style={{
-              display: 'inline-flex', alignItems: 'center', gap: '6px',
-              fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-dim)',
-              textDecoration: 'none', padding: '10px 16px',
-              border: '1px solid var(--border-subtle)', borderRadius: '12px',
-              background: 'rgba(7, 10, 18, 0.85)', backdropFilter: 'blur(12px)',
-              transition: 'all 0.2s'
-            }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--f1-red)'; e.currentTarget.style.color = '#fff'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.color = 'var(--text-dim)'; }}
-            >
-              <Github size={16} /> @GrayViper
-            </a>
-
-            <a href="https://www.linkedin.com/in/chinni-krishna8" target="_blank" rel="noreferrer" style={{
-              display: 'inline-flex', alignItems: 'center', gap: '6px',
-              fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-dim)',
-              textDecoration: 'none', padding: '10px 16px',
-              border: '1px solid var(--border-subtle)', borderRadius: '12px',
-              background: 'rgba(7, 10, 18, 0.85)', backdropFilter: 'blur(12px)',
-              transition: 'all 0.2s'
-            }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--cyber-cyan)'; e.currentTarget.style.color = '#fff'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.color = 'var(--text-dim)'; }}
-            >
-              <Linkedin size={16} /> LinkedIn
-            </a>
-          </div>
-        </div>
-
-        {/* Pulsing Scroll Indicator */}
-        <div style={{
-          fontSize: '0.74rem',
-          fontFamily: 'var(--font-mono)',
-          color: 'var(--text-dim)',
-          letterSpacing: '0.08em',
+      {/* Floating Subtle Vintage Scroll / Enter Indicator */}
+      <div
+        onClick={handleEnterPortfolio}
+        style={{
+          position: 'absolute',
+          bottom: '24px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 30,
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           gap: '6px',
-          cursor: 'pointer'
+          cursor: 'pointer',
+          background: 'rgba(7, 10, 18, 0.75)',
+          backdropFilter: 'blur(16px)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: '9999px',
+          padding: '8px 20px',
+          boxShadow: '0 8px 30px rgba(0, 0, 0, 0.6)',
+          transition: 'all 0.25s'
         }}
-          onClick={handleEnterPortfolio}
-        >
-          <span style={{ color: 'var(--cyber-cyan)' }}>▼</span>
-          <span>SCROLL OR CLICK TO ENTER SYSTEM</span>
-          <span style={{ color: 'var(--cyber-cyan)' }}>▼</span>
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = 'var(--cyber-cyan)';
+          e.currentTarget.style.transform = 'translateX(-50%) translateY(-2px)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = 'var(--border-subtle)';
+          e.currentTarget.style.transform = 'translateX(-50%) translateY(0px)';
+        }}
+      >
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          fontSize: '0.78rem',
+          fontFamily: 'var(--font-mono)',
+          color: '#fff',
+          fontWeight: '700',
+          letterSpacing: '0.04em'
+        }}>
+          <span style={{ color: 'var(--f1-yellow)' }}>▼</span>
+          <span>SCROLL OR CLICK TO ENTER PORTFOLIO</span>
+          <span style={{ color: 'var(--f1-yellow)' }}>▼</span>
         </div>
       </div>
-
     </section>
   );
 }
