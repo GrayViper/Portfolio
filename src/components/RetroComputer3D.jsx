@@ -3,23 +3,24 @@ import * as THREE from 'three';
 import { Volume2, VolumeX, RefreshCw, Play } from 'lucide-react';
 
 /**
- * RetroComputer3D Component - Real-time CRT Typewriter Animation Stage
+ * RetroComputer3D Component - Real-time cmatrix Terminal Typing Engine
  *
  * Features:
- * - Real-time typewriter boot animation: Chinni Krishna's operator bio,
- *   cloud architecture matrix, and cluster telemetry type out dynamically on the CRT screen.
- * - Synchronized 3D physical keycap depressions and mechanical keyboard audio clicks as letters type.
+ * - cmatrix Style Text Typing: Deciphers and types text with streaming matrix glyphs,
+ *   faint background digital matrix rain, and phosphor matrix green styling.
+ * - Calibrated Slower Typing Speed: Smooth, readable character-by-character pacing.
+ * - Synchronized 3D physical keycap depressions and mechanical keyboard audio clicks.
  * - Interactive shell prompt with blinking cursor once typing completes.
- * - Instant skip on click/keypress, plus a "Replay Typing" controller in ambient tools.
- * - Calibrated 0.82x 3D model scale for desktop containment.
+ * - Instant skip on click/keypress, plus "Replay Typing" button.
+ * - Calibrated 0.82x 3D model scale for desktop screen containment.
  */
 export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPortfolio }) {
   const mountRef = useRef(null);
-  const [crtColor, setCrtColor] = useState('amber'); // 'amber' (default) | 'cyan' | 'green' | 'red'
+  const [crtColor, setCrtColor] = useState('green'); // 'green' (cmatrix default) | 'amber' | 'cyan' | 'red'
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [shellInput, setShellInput] = useState('');
   const [shellHistory, setShellHistory] = useState([
-    'COMMODORE PET 8296 DEVOPS OS v5.0',
+    'COMMODORE PET 8296 DEVOPS OS v5.0 (CMATRIX EDITION)',
     'TYPE COMMANDS ON YOUR KEYBOARD ("skills", "projects", "status", "clear"):',
     ''
   ]);
@@ -134,7 +135,7 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
     });
 
     const cyanKeyMat = new THREE.MeshStandardMaterial({
-      color: 0xfdb813,
+      color: 0x10b981,
       roughness: 0.35,
       metalness: 0.35,
     });
@@ -333,7 +334,7 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0xffb000, 2.0);
+    const keyLight = new THREE.DirectionalLight(0x00ff66, 2.0);
     keyLight.position.set(4, 5, 4);
     keyLight.castShadow = true;
     scene.add(keyLight);
@@ -346,7 +347,7 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
     topRimLight.position.set(0, 6, -3);
     scene.add(topRimLight);
 
-    const screenGlowLight = new THREE.PointLight(0xffb000, 2.4, 4.4);
+    const screenGlowLight = new THREE.PointLight(0x00ff66, 2.4, 4.4);
     screenGlowLight.position.set(0, 0.6, 1.3);
     scene.add(screenGlowLight);
 
@@ -359,9 +360,11 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
     let currentRotation = { x: 0.05, y: -0.10 };
     let mouseParallax = { x: 0, y: 0 };
 
-    // Typewriter Animation State
+    // Typewriter Animation State & Matrix Rain Streams
     let typeTick = 0;
     let isTypewriterFinished = false;
+    const matrixRainDrops = Array(32).fill(0).map(() => Math.floor(Math.random() * 768));
+    const matrixGlyphs = '0123456789ABCDEF!@#$%^&*<>[]{}/\\~+=µ§λ∆¥¢';
 
     restartTypewriterRef.current = () => {
       typeTick = 0;
@@ -404,13 +407,11 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
 
       // Quick click
       if (dist < 10 && duration < 500) {
-        // If typewriter is still actively typing, skip to finished state on click
-        if (!isTypewriterFinished && typeTick < 390) {
-          typeTick = 400;
+        if (!isTypewriterFinished && typeTick < 550) {
+          typeTick = 560;
           isTypewriterFinished = true;
           playKeyClick(true);
         } else {
-          // If already finished typing, proceed into portfolio
           playKeyClick(true);
           if (onEnterPortfolioRef.current) {
             onEnterPortfolioRef.current();
@@ -455,8 +456,8 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
         const dist = Math.hypot(t.clientX - touchStartPos.x, t.clientY - touchStartPos.y);
         const duration = Date.now() - touchStartTime;
         if (dist < 14 && duration < 500) {
-          if (!isTypewriterFinished && typeTick < 390) {
-            typeTick = 400;
+          if (!isTypewriterFinished && typeTick < 550) {
+            typeTick = 560;
             isTypewriterFinished = true;
             playKeyClick(true);
           } else {
@@ -487,9 +488,8 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
 
       if (e.key === 'Enter') {
         playKeyClick(true);
-        // If typing still in progress, complete it
-        if (!isTypewriterFinished && typeTick < 390) {
-          typeTick = 400;
+        if (!isTypewriterFinished && typeTick < 550) {
+          typeTick = 560;
           isTypewriterFinished = true;
           return;
         }
@@ -538,53 +538,59 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
       angularVelocity = { x: 0, y: 0 };
     };
 
-    // Helper for typewriter slicing
-    const getTypewritten = (fullText, currentTick, startTick, charsPerTick = 1.3) => {
-      if (currentTick < startTick) return { text: '', isDone: false, isTyping: false };
+    // Helper for cmatrix decipher typewriter (with a slower, authentic pacing)
+    const getMatrixTypewritten = (fullText, currentTick, startTick, charsPerTick = 0.85) => {
+      if (currentTick < startTick) return { text: '', isDone: false, isTyping: false, decryptTail: '' };
       const numChars = Math.floor((currentTick - startTick) * charsPerTick);
       if (numChars >= fullText.length) {
-        return { text: fullText, isDone: true, isTyping: false };
+        return { text: fullText, isDone: true, isTyping: false, decryptTail: '' };
       }
-      return { text: fullText.substring(0, numChars), isDone: false, isTyping: true };
+      const solved = fullText.substring(0, numChars);
+      let decryptTail = '';
+      const remainingLen = Math.min(2, fullText.length - numChars);
+      for (let i = 0; i < remainingLen; i++) {
+        decryptTail += matrixGlyphs[(currentTick * 3 + i * 7) % matrixGlyphs.length];
+      }
+      return { text: solved, isDone: false, isTyping: true, decryptTail };
     };
 
-    // 7. Dynamic Typewriter 1024x768 High-Definition CRT Screen Drawing Loop
+    // 7. Dynamic cmatrix 1024x768 High-Definition CRT Screen Drawing Loop
     let tick = 0;
 
     const renderScreen = () => {
       tick++;
       typeTick++;
 
-      if (typeTick >= 400) {
+      if (typeTick >= 560) {
         isTypewriterFinished = true;
       }
 
       // Trigger 3D keycap depression & click sounds during active typing
-      if (!isTypewriterFinished && typeTick < 390) {
-        if (typeTick % 4 === 0) {
+      if (!isTypewriterFinished && typeTick < 550) {
+        if (typeTick % 5 === 0) {
           if (keypressAnimationTriggerRef.current) {
             keypressAnimationTriggerRef.current(false);
           }
-          if (typeTick % 8 === 0) {
+          if (typeTick % 10 === 0) {
             playKeyClick(false);
           }
         }
       }
 
-      // Color Theme Palette
+      // Color Theme Palette (cmatrix Green default)
       const colorScheme = crtColorRef.current;
-      let primaryColor = '#ffb000'; // Amber gold default
-      let secondaryColor = '#00f2fe';
-      let accentColor = '#10b981';
+      let primaryColor = '#00ff66'; // Matrix phosphor green
+      let secondaryColor = '#38ef7d';
+      let accentColor = '#a3ff00';
 
-      if (colorScheme === 'cyan') {
+      if (colorScheme === 'amber') {
+        primaryColor = '#ffb000';
+        secondaryColor = '#ff8800';
+        accentColor = '#fdb813';
+      } else if (colorScheme === 'cyan') {
         primaryColor = '#00f2fe';
         secondaryColor = '#ff1801';
         accentColor = '#10b981';
-      } else if (colorScheme === 'green') {
-        primaryColor = '#10b981';
-        secondaryColor = '#4ade80';
-        accentColor = '#22c55e';
       } else if (colorScheme === 'red') {
         primaryColor = '#ff1801';
         secondaryColor = '#fdb813';
@@ -598,32 +604,48 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
       screenCtx.fillStyle = '#02050b';
       screenCtx.fillRect(0, 0, 1024, 768);
 
-      // 2. Full-Screen CRT Scanlines
-      screenCtx.fillStyle = `${primaryColor}0d`;
+      // 2. Subtle cmatrix Digital Rain Streaming in Background
+      screenCtx.font = '13px "Fira Code", monospace';
+      screenCtx.fillStyle = `${primaryColor}12`;
+      for (let col = 0; col < 32; col++) {
+        const x = 32 * col + 14;
+        const y = matrixRainDrops[col];
+        const glyph = matrixGlyphs[(tick + col * 7) % matrixGlyphs.length];
+        screenCtx.fillText(glyph, x, y);
+        matrixRainDrops[col] = (y + 10 > 768) ? 0 : y + 10;
+      }
+
+      // 3. Full-Screen CRT Scanlines
+      screenCtx.fillStyle = `${primaryColor}0e`;
       for (let y = 0; y < 768; y += 8) {
         screenCtx.fillRect(0, y, 1024, 3);
       }
 
-      // 3. CRT Outer Vignette Border
-      screenCtx.strokeStyle = `${primaryColor}40`;
+      // 4. CRT Outer Vignette Border
+      screenCtx.strokeStyle = `${primaryColor}45`;
       screenCtx.lineWidth = 10;
       screenCtx.strokeRect(10, 10, 1004, 748);
 
       // --- SECTION 1: TOP SYSTEM HEADER BANNER ---
-      const headerObj = getTypewritten('*** COMMODORE PET 8296 DEVOPS OS // 64K RAM READY ***', typeTick, 10, 1.8);
+      const headerObj = getMatrixTypewritten('*** COMMODORE PET 8296 DEVOPS OS (CMATRIX) // 64K RAM READY ***', typeTick, 15, 0.95);
 
-      if (typeTick >= 10) {
-        screenCtx.fillStyle = `${primaryColor}28`;
+      if (typeTick >= 15) {
+        screenCtx.fillStyle = `${primaryColor}24`;
         screenCtx.fillRect(20, 20, 984, 52);
         screenCtx.strokeStyle = `${primaryColor}60`;
         screenCtx.lineWidth = 1.5;
         screenCtx.strokeRect(20, 20, 984, 52);
 
         screenCtx.fillStyle = primaryColor;
-        screenCtx.font = 'bold 22px "Fira Code", monospace';
-        screenCtx.fillText(headerObj.text + (headerObj.isTyping ? '█' : ''), 36, 54);
+        screenCtx.font = 'bold 21px "Fira Code", monospace';
+        screenCtx.fillText(headerObj.text, 36, 54);
 
-        if (headerObj.isDone || typeTick >= 45) {
+        if (headerObj.isTyping) {
+          screenCtx.fillStyle = '#ffffff';
+          screenCtx.fillText(headerObj.decryptTail + '█', 36 + screenCtx.measureText(headerObj.text).width, 54);
+        }
+
+        if (headerObj.isDone || typeTick >= 85) {
           screenCtx.fillStyle = accentColor;
           screenCtx.font = 'bold 18px "Fira Code", monospace';
           screenCtx.fillText('● SYSTEM 100% HEALTHY', 760, 54);
@@ -631,39 +653,59 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
       }
 
       // --- SECTION 2: OPERATOR IDENTITY CARD ---
-      if (typeTick >= 48) {
+      if (typeTick >= 70) {
         screenCtx.fillStyle = 'rgba(255, 255, 255, 0.04)';
         screenCtx.fillRect(20, 82, 984, 114);
         screenCtx.strokeStyle = `${primaryColor}35`;
         screenCtx.strokeRect(20, 82, 984, 114);
 
-        // Operator Name & Handle
-        const nameObj = getTypewritten('CHAKKA CHINNI KRISHNA', typeTick, 50, 1.6);
-        const handleObj = getTypewritten('(@GrayViper)', typeTick, 70, 1.6);
+        // Operator Name & Handle (cmatrix Decrypt Effect)
+        const nameObj = getMatrixTypewritten('CHAKKA CHINNI KRISHNA', typeTick, 75, 0.85);
+        const handleObj = getMatrixTypewritten('(@GrayViper)', typeTick, 105, 0.85);
 
         screenCtx.fillStyle = '#ffffff';
         screenCtx.font = 'bold 30px "Fira Code", monospace';
-        screenCtx.fillText(nameObj.text + (nameObj.isTyping ? '█' : ''), 40, 122);
+        screenCtx.fillText(nameObj.text, 40, 122);
+
+        if (nameObj.isTyping) {
+          screenCtx.fillStyle = accentColor;
+          screenCtx.fillText(nameObj.decryptTail + '█', 40 + screenCtx.measureText(nameObj.text).width, 122);
+        }
 
         if (nameObj.isDone) {
           screenCtx.fillStyle = secondaryColor;
           screenCtx.font = 'bold 22px "Fira Code", monospace';
-          screenCtx.fillText(handleObj.text + (handleObj.isTyping ? '█' : ''), 480, 122);
+          screenCtx.fillText(handleObj.text, 480, 122);
+
+          if (handleObj.isTyping) {
+            screenCtx.fillStyle = '#ffffff';
+            screenCtx.fillText(handleObj.decryptTail + '█', 480 + screenCtx.measureText(handleObj.text).width, 122);
+          }
         }
 
         // Role & Education
-        const roleObj = getTypewritten('ROLE : DevOps Engineer · Cloud Infrastructure & Full-Stack Specialist', typeTick, 85, 2.0);
-        if (roleObj.text) {
+        const roleObj = getMatrixTypewritten('ROLE : DevOps Engineer · Cloud Infrastructure & Full-Stack Specialist', typeTick, 125, 1.0);
+        if (roleObj.text || roleObj.isTyping) {
           screenCtx.fillStyle = primaryColor;
           screenCtx.font = '20px "Fira Code", monospace';
-          screenCtx.fillText(roleObj.text + (roleObj.isTyping ? '█' : ''), 40, 154);
+          screenCtx.fillText(roleObj.text, 40, 154);
+
+          if (roleObj.isTyping) {
+            screenCtx.fillStyle = '#ffffff';
+            screenCtx.fillText(roleObj.decryptTail + '█', 40 + screenCtx.measureText(roleObj.text).width, 154);
+          }
         }
 
-        const eduObj = getTypewritten('EDU  : B.Tech CSE @ Lovely Professional University (CGPA 7.2)', typeTick, 125, 2.0);
-        if (eduObj.text) {
+        const eduObj = getMatrixTypewritten('EDU  : B.Tech CSE @ Lovely Professional University (CGPA 7.2)', typeTick, 185, 1.0);
+        if (eduObj.text || eduObj.isTyping) {
           screenCtx.fillStyle = '#cbd5e1';
           screenCtx.font = '19px "Fira Code", monospace';
-          screenCtx.fillText(eduObj.text + (eduObj.isTyping ? '█' : ''), 40, 182);
+          screenCtx.fillText(eduObj.text, 40, 182);
+
+          if (eduObj.isTyping) {
+            screenCtx.fillStyle = '#ffffff';
+            screenCtx.fillText(eduObj.decryptTail + '█', 40 + screenCtx.measureText(eduObj.text).width, 182);
+          }
         }
       }
 
@@ -689,7 +731,7 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
       ];
 
       // Left Column: Cloud & IaC
-      if (typeTick >= 160) {
+      if (typeTick >= 235) {
         screenCtx.fillStyle = 'rgba(255, 255, 255, 0.02)';
         screenCtx.fillRect(20, 206, 482, 336);
         screenCtx.strokeStyle = `${primaryColor}30`;
@@ -701,16 +743,21 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
 
         screenCtx.font = '18px "Fira Code", monospace';
         cloudLines.forEach((item, idx) => {
-          const lineObj = getTypewritten(item, typeTick, 170 + idx * 16, 2.4);
-          if (lineObj.text) {
+          const lineObj = getMatrixTypewritten(item, typeTick, 245 + idx * 24, 1.1);
+          if (lineObj.text || lineObj.isTyping) {
             screenCtx.fillStyle = idx === 0 ? accentColor : (idx === 1 ? secondaryColor : '#cbd5e1');
-            screenCtx.fillText(lineObj.text + (lineObj.isTyping ? '█' : ''), 36, 280 + idx * 36);
+            screenCtx.fillText(lineObj.text, 36, 280 + idx * 36);
+
+            if (lineObj.isTyping) {
+              screenCtx.fillStyle = '#ffffff';
+              screenCtx.fillText(lineObj.decryptTail + '█', 36 + screenCtx.measureText(lineObj.text).width, 280 + idx * 36);
+            }
           }
         });
       }
 
       // Right Column: CI/CD & Dev
-      if (typeTick >= 170) {
+      if (typeTick >= 250) {
         screenCtx.fillStyle = 'rgba(255, 255, 255, 0.02)';
         screenCtx.fillRect(522, 206, 482, 336);
         screenCtx.strokeStyle = `${primaryColor}30`;
@@ -722,16 +769,21 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
 
         screenCtx.font = '18px "Fira Code", monospace';
         devLines.forEach((item, idx) => {
-          const lineObj = getTypewritten(item, typeTick, 180 + idx * 16, 2.4);
-          if (lineObj.text) {
+          const lineObj = getMatrixTypewritten(item, typeTick, 260 + idx * 24, 1.1);
+          if (lineObj.text || lineObj.isTyping) {
             screenCtx.fillStyle = idx === 0 ? accentColor : (idx === 5 ? secondaryColor : '#cbd5e1');
-            screenCtx.fillText(lineObj.text + (lineObj.isTyping ? '█' : ''), 538, 280 + idx * 36);
+            screenCtx.fillText(lineObj.text, 538, 280 + idx * 36);
+
+            if (lineObj.isTyping) {
+              screenCtx.fillStyle = '#ffffff';
+              screenCtx.fillText(lineObj.decryptTail + '█', 538 + screenCtx.measureText(lineObj.text).width, 280 + idx * 36);
+            }
           }
         });
       }
 
       // --- SECTION 4: LIVE TELEMETRY RIBBON ---
-      if (typeTick >= 295) {
+      if (typeTick >= 430) {
         screenCtx.fillStyle = `${primaryColor}18`;
         screenCtx.fillRect(20, 552, 984, 60);
         screenCtx.strokeStyle = `${primaryColor}40`;
@@ -741,17 +793,22 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
         screenCtx.font = 'bold 19px "Fira Code", monospace';
         screenCtx.fillText('● CLUSTER TELEMETRY:', 36, 588);
 
-        const telemetryObj = getTypewritten('6/6 PODS RUNNING · 99.9% UPTIME · SLA 1.82s · GITOPS SYNCED', typeTick, 305, 2.2);
-        if (telemetryObj.text) {
+        const telemetryObj = getMatrixTypewritten('6/6 PODS RUNNING · 99.9% UPTIME · SLA 1.82s · GITOPS SYNCED', typeTick, 440, 1.1);
+        if (telemetryObj.text || telemetryObj.isTyping) {
           screenCtx.fillStyle = '#ffffff';
           screenCtx.font = '18px "Fira Code", monospace';
-          screenCtx.fillText(telemetryObj.text + (telemetryObj.isTyping ? '█' : ''), 280, 588);
+          screenCtx.fillText(telemetryObj.text, 280, 588);
+
+          if (telemetryObj.isTyping) {
+            screenCtx.fillStyle = accentColor;
+            screenCtx.fillText(telemetryObj.decryptTail + '█', 280 + screenCtx.measureText(telemetryObj.text).width, 588);
+          }
         }
       }
 
       // --- SECTION 5: INTERACTIVE SHELL & ENTER ACTION BAR ---
-      if (typeTick >= 350) {
-        screenCtx.fillStyle = `${primaryColor}25`;
+      if (typeTick >= 500) {
+        screenCtx.fillStyle = `${primaryColor}24`;
         screenCtx.fillRect(20, 624, 984, 114);
         screenCtx.strokeStyle = primaryColor;
         screenCtx.lineWidth = 2.5;
@@ -914,7 +971,7 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
           style={{
             background: 'transparent',
             border: 'none',
-            color: 'var(--f1-yellow)',
+            color: 'var(--terminal-green)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
@@ -924,7 +981,7 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
             fontFamily: 'var(--font-mono)',
             fontWeight: '700'
           }}
-          title="Replay Typewriter Boot Sequence"
+          title="Replay cmatrix Typewriter Sequence"
         >
           <Play size={12} /> Replay
         </button>
@@ -932,9 +989,9 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
         {/* Phosphor Color Selector */}
         <div style={{ display: 'flex', gap: '5px', paddingRight: '6px', borderRight: '1px solid var(--border-subtle)', borderLeft: '1px solid var(--border-subtle)', paddingLeft: '6px' }}>
           {[
+            { id: 'green', color: '#00ff66', label: 'Matrix Green' },
             { id: 'amber', color: '#ffb000', label: 'Amber Phosphor' },
             { id: 'cyan', color: '#00f2fe', label: 'Cyan Phosphor' },
-            { id: 'green', color: '#10b981', label: 'Green Phosphor' },
             { id: 'red', color: '#ff1801', label: 'Red Phosphor' }
           ].map(c => (
             <button
@@ -960,7 +1017,7 @@ export default function RetroComputer3D({ isFullScreenLanding = true, onEnterPor
           style={{
             background: 'transparent',
             border: 'none',
-            color: soundEnabled ? 'var(--cyber-cyan)' : 'var(--text-dim)',
+            color: soundEnabled ? 'var(--terminal-green)' : 'var(--text-dim)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
