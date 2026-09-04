@@ -1,65 +1,37 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 /**
- * LusionConnectingLine Component - High-Fidelity Lusion.co Real-Time Canvas Ribbon Engine
+ * LusionConnectingLine Component - High-Performance SVG Fluid Ribbon Engine
  *
- * Authentic Lusion.co Features:
- * - Real-time continuous fluid physics: the line breathes, undulates, and ripples dynamically with multi-octave wave physics.
- * - 3D-like liquid ribbon with variable thickness tapering and chromatic glow.
- * - Dynamic scroll-driven elastic spring drawing that trails gracefully through each card.
- * - Interactive cursor magnetic flex: the line organically bends toward the mouse cursor.
- * - Floating luminescence dust particles riding along the glowing spline.
- * - Layered behind cards (z-index: 1) so it visibly weaves through the translucent glass panels.
+ * Ultra-Smooth Architecture:
+ * - Pure SVG Vector Spline with GPU-accelerated path rasterization (0 Megapixel memory overhead).
+ * - Multi-stop vibrant luminous gradient (#38bdf8 -> #10b981 -> #00f2fe -> #ff2a5f -> #818cf8).
+ * - Smooth scroll-driven stroke-dashoffset interpolation.
+ * - Dynamic anchor points linking Hero -> Skills -> Projects -> Terminal -> Certifications -> Contact.
+ * - Layered behind cards (z-index: 1) with zero frame drops or CPU stutter.
  */
 export default function LusionConnectingLine() {
-  const canvasRef = useRef(null);
+  const [pathData, setPathData] = useState('');
+  const [totalLength, setTotalLength] = useState(1000);
+  const [dimensions, setDimensions] = useState({ width: 1400, height: 4000 });
+  const pathRef = useRef(null);
+  const glowPathRef = useRef(null);
+  const headCircleRef = useRef(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
     let animId;
-    let width = 0;
-    let height = 0;
-    let dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let targetProgress = 0;
+    let currentProgress = 0;
 
-    // Physics Anchor Points (discovered dynamically from cards in DOM)
-    let baseNodes = [];
-    let springNodes = [];
-
-    // Scroll & Mouse Physics State
-    let targetScrollProgress = 0;
-    let currentScrollProgress = 0;
-    let mousePos = { x: -1000, y: -1000 };
-    let mouseActive = false;
-    let time = 0;
-
-    // Drifting Luminescence Sparks
-    const particles = Array.from({ length: 28 }, (_, i) => ({
-      t: Math.random(),
-      speed: 0.0006 + Math.random() * 0.0012,
-      size: 1.5 + Math.random() * 2.5,
-      alpha: 0.2 + Math.random() * 0.7,
-      color: i % 3 === 0 ? '#38bdf8' : (i % 3 === 1 ? '#2dd4bf' : '#fbbf24'),
-      offset: (Math.random() - 0.5) * 14
-    }));
-
-    // Discover exact card centers in DOM
-    const updateAnchorNodes = () => {
+    const computeAnchorsAndPath = () => {
       const mainEl = document.querySelector('main') || document.body;
       const mainRect = mainEl.getBoundingClientRect();
       const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
       const mainTopAbsolute = mainRect.top + scrollTop;
 
-      width = mainEl.clientWidth || window.innerWidth;
-      height = mainEl.scrollHeight || mainRect.height;
-
-      canvas.width = width * dpr;
-      canvas.height = height * dpr;
-      canvas.style.width = `${width}px`;
-      canvas.style.height = `${height}px`;
+      const w = mainEl.clientWidth || window.innerWidth;
+      const h = mainEl.scrollHeight || mainRect.height;
+      setDimensions({ width: w, height: h });
 
       const anchors = [];
 
@@ -67,8 +39,8 @@ export default function LusionConnectingLine() {
         if (!el) return null;
         const rect = el.getBoundingClientRect();
         return {
-          x: rect.left + rect.width / 2 - mainRect.left,
-          y: rect.top + rect.height / 2 + scrollTop - mainTopAbsolute
+          x: Math.round(rect.left + rect.width / 2 - mainRect.left),
+          y: Math.round(rect.top + rect.height / 2 + scrollTop - mainTopAbsolute)
         };
       };
 
@@ -79,7 +51,7 @@ export default function LusionConnectingLine() {
         const heroRect = heroEl.getBoundingClientRect();
         startY = heroRect.bottom + scrollTop - mainTopAbsolute - 80;
       }
-      anchors.push({ x: width * 0.50, y: Math.max(180, startY) });
+      anchors.push({ x: Math.round(w * 0.50), y: Math.max(180, Math.round(startY)) });
 
       // 1. Skills Header & Cards
       const skillsHeader = document.querySelector('#skills .section-tag') || document.getElementById('skills');
@@ -88,7 +60,7 @@ export default function LusionConnectingLine() {
         if (pt) anchors.push(pt);
       }
 
-      const skillCards = document.querySelectorAll('#skills .glass-card, #skills [style*="border-radius"]');
+      const skillCards = document.querySelectorAll('#skills .glass-card-web, #skills .glass-card');
       if (skillCards.length >= 2) {
         const pt1 = getCenter(skillCards[0]);
         const pt2 = getCenter(skillCards[Math.min(3, skillCards.length - 1)]);
@@ -96,7 +68,7 @@ export default function LusionConnectingLine() {
         if (pt2) anchors.push(pt2);
       }
 
-      // 2. Project Cards (Career_Genie, hi_links, Cura-AI-Health)
+      // 2. Project Cards
       const projectCards = document.querySelectorAll('#projects .glass-card-web, #projects [class*="glass"]');
       if (projectCards && projectCards.length > 0) {
         projectCards.forEach(card => {
@@ -112,14 +84,14 @@ export default function LusionConnectingLine() {
       }
 
       // 3. DevOps Terminal
-      const termEl = document.querySelector('#terminal .glass-card, #terminal') || document.getElementById('terminal');
+      const termEl = document.querySelector('#terminal .glass-card-web, #terminal .glass-card, #terminal') || document.getElementById('terminal');
       if (termEl) {
         const pt = getCenter(termEl);
         if (pt) anchors.push(pt);
       }
 
       // 4. Certifications & Academics
-      const certCards = document.querySelectorAll('#certifications .glass-card-web, #certifications [class*="glass"]');
+      const certCards = document.querySelectorAll('#certs .glass-card-web, #certs [class*="glass"]');
       if (certCards && certCards.length >= 2) {
         const pt1 = getCenter(certCards[0]);
         const pt2 = getCenter(certCards[certCards.length - 1]);
@@ -127,266 +99,93 @@ export default function LusionConnectingLine() {
         if (pt2) anchors.push(pt2);
       }
 
-      // 5. Contact Dispatch Station
-      const contactEl = document.querySelector('#contact .glass-card, #contact form, #contact') || document.getElementById('contact');
+      // 5. Contact Station
+      const contactEl = document.querySelector('#contact .glass-card-web, #contact .glass-card, #contact form, #contact') || document.getElementById('contact');
       if (contactEl) {
         const pt = getCenter(contactEl);
         if (pt) anchors.push(pt);
       }
 
       // 6. Footer End
-      anchors.push({ x: width * 0.50, y: height - 60 });
+      anchors.push({ x: Math.round(w * 0.50), y: h - 60 });
 
-      baseNodes = anchors;
+      if (anchors.length < 2) return;
 
-      // Initialize dense physics spline control points (interpolated with organic wave offsets)
-      if (anchors.length >= 2) {
-        const dense = [];
-        const totalPoints = 140;
-
-        for (let i = 0; i <= totalPoints; i++) {
-          const u = i / totalPoints;
-          const totalSegments = anchors.length - 1;
-          const segFloat = u * totalSegments;
-          const segIdx = Math.min(Math.floor(segFloat), totalSegments - 1);
-          const t = segFloat - segIdx;
-
-          const p0 = anchors[Math.max(0, segIdx - 1)];
-          const p1 = anchors[segIdx];
-          const p2 = anchors[Math.min(totalSegments, segIdx + 1)];
-          const p3 = anchors[Math.min(totalSegments, segIdx + 2)];
-
-          // Catmull-Rom smooth interpolation
-          const t2 = t * t;
-          const t3 = t2 * t;
-
-          const x = 0.5 * ((2 * p1.x) +
-            (-p0.x + p2.x) * t +
-            (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 +
-            (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3);
-
-          const y = 0.5 * ((2 * p1.y) +
-            (-p0.y + p2.y) * t +
-            (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 +
-            (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3);
-
-          dense.push({
-            baseX: x,
-            baseY: y,
-            currX: x,
-            currY: y,
-            vx: 0,
-            vy: 0,
-            u
-          });
-        }
-        springNodes = dense;
+      // Construct Smooth Cubic Bezier Spline
+      let d = `M ${anchors[0].x} ${anchors[0].y}`;
+      for (let i = 0; i < anchors.length - 1; i++) {
+        const p0 = anchors[i];
+        const p1 = anchors[i + 1];
+        const cpY = (p0.y + p1.y) / 2;
+        d += ` C ${p0.x} ${cpY}, ${p1.x} ${cpY}, ${p1.x} ${p1.y}`;
       }
+
+      setPathData(d);
     };
 
-    updateAnchorNodes();
+    computeAnchorsAndPath();
 
-    // Resize listeners
     const handleResize = () => {
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
-      updateAnchorNodes();
+      computeAnchorsAndPath();
     };
 
     window.addEventListener('resize', handleResize);
     window.addEventListener('orientationchange', handleResize);
 
     const observer = new ResizeObserver(() => {
-      updateAnchorNodes();
+      computeAnchorsAndPath();
     });
 
     const mainEl = document.querySelector('main');
     if (mainEl) observer.observe(mainEl);
 
-    // Mouse Tracking for Magnetic Flex
-    const handleMouseMove = (e) => {
-      const mainEl = document.querySelector('main') || document.body;
-      const mainRect = mainEl.getBoundingClientRect();
-      const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
-      const mainTopAbsolute = mainRect.top + scrollTop;
-
-      mousePos = {
-        x: e.clientX - mainRect.left,
-        y: e.clientY + scrollTop - mainTopAbsolute
-      };
-      mouseActive = true;
-    };
-
-    const handleMouseLeave = () => {
-      mouseActive = false;
-    };
-
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    window.addEventListener('mouseleave', handleMouseLeave);
-
-    // Scroll Progress
+    // Scroll tracking
     const handleScroll = () => {
       const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
       const winHeight = window.innerHeight;
       const docHeight = document.documentElement.scrollHeight - winHeight;
-
-      const raw = Math.max(0, (scrollTop - 120) / (docHeight - 220));
-      targetScrollProgress = Math.min(1, Math.max(0, raw));
+      const raw = Math.max(0, (scrollTop - 120) / (docHeight - 240));
+      targetProgress = Math.min(1, Math.max(0, raw));
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
 
-    // Main Fluid Physics Render Loop
-    const render = () => {
-      time += 0.024;
-      currentScrollProgress += (targetScrollProgress - currentScrollProgress) * 0.085;
+    // 60FPS Smooth Progress Interpolator
+    const updateProgress = () => {
+      currentProgress += (targetProgress - currentProgress) * 0.12;
 
-      ctx.save();
-      ctx.scale(dpr, dpr);
-      ctx.clearRect(0, 0, width, height);
+      if (pathRef.current) {
+        const len = pathRef.current.getTotalLength ? pathRef.current.getTotalLength() : 4000;
+        if (len > 0) {
+          const drawLen = len * currentProgress;
+          const offset = len - drawLen;
 
-      if (springNodes.length > 2) {
-        const numDrawn = Math.floor(springNodes.length * currentScrollProgress);
+          pathRef.current.style.strokeDasharray = `${len}`;
+          pathRef.current.style.strokeDashoffset = `${offset}`;
 
-        // 1. Physics update for each node (continuous organic wave ripples + mouse magnetic pull)
-        springNodes.forEach((node, i) => {
-          const wave1 = Math.sin(time * 1.8 + i * 0.18) * 18;
-          const wave2 = Math.cos(time * 0.9 + i * 0.08) * 12;
-          const wave3 = Math.sin(time * 3.2 + i * 0.32) * 4;
-          const waveTotal = wave1 + wave2 + wave3;
-
-          let targetX = node.baseX + waveTotal;
-          let targetY = node.baseY + Math.sin(time * 1.4 + i * 0.12) * 6;
-
-          // Mouse magnetic interaction
-          if (mouseActive) {
-            const dx = mousePos.x - node.currX;
-            const dy = mousePos.y - node.currY;
-            const dist = Math.hypot(dx, dy);
-            const maxDist = 220;
-
-            if (dist < maxDist && dist > 1) {
-              const force = (1 - dist / maxDist) * 48;
-              targetX += (dx / dist) * force;
-              targetY += (dy / dist) * force;
-            }
+          if (glowPathRef.current) {
+            glowPathRef.current.style.strokeDasharray = `${len}`;
+            glowPathRef.current.style.strokeDashoffset = `${offset}`;
           }
 
-          // Spring damping physics
-          node.vx = (node.vx + (targetX - node.currX) * 0.12) * 0.82;
-          node.vy = (node.vy + (targetY - node.currY) * 0.12) * 0.82;
-          node.currX += node.vx;
-          node.currY += node.vy;
-        });
-
-        // 2. Render Full Fluid Lusion Spine Path
-        if (numDrawn >= 2) {
-          // Dynamic Multi-Stop Gradient along the page
-          const grad = ctx.createLinearGradient(0, 0, width, height);
-          grad.addColorStop(0.00, '#38bdf8'); // Ice Cyan
-          grad.addColorStop(0.25, '#10b981'); // Emerald
-          grad.addColorStop(0.50, '#00f2fe'); // Neon Cyan
-          grad.addColorStop(0.75, '#ff2a5f'); // Vibrant Coral
-          grad.addColorStop(1.00, '#818cf8'); // Electric Violet
-
-          // Layer A: Wide Ambient Neon Bloom
-          ctx.beginPath();
-          ctx.moveTo(springNodes[0].currX, springNodes[0].currY);
-          for (let i = 1; i < numDrawn; i++) {
-            const xc = (springNodes[i].currX + springNodes[i - 1].currX) / 2;
-            const yc = (springNodes[i].currY + springNodes[i - 1].currY) / 2;
-            ctx.quadraticCurveTo(springNodes[i - 1].currX, springNodes[i - 1].currY, xc, yc);
+          if (headCircleRef.current && currentProgress > 0.01) {
+            const pt = pathRef.current.getPointAtLength(drawLen);
+            headCircleRef.current.setAttribute('cx', pt.x);
+            headCircleRef.current.setAttribute('cy', pt.y);
+            headCircleRef.current.style.opacity = currentProgress >= 0.99 ? '0' : '1';
           }
-          ctx.strokeStyle = grad;
-          ctx.lineWidth = 7;
-          ctx.lineCap = 'round';
-          ctx.lineJoin = 'round';
-          ctx.shadowColor = '#00f2fe';
-          ctx.shadowBlur = 18;
-          ctx.globalAlpha = 0.45;
-          ctx.stroke();
-
-          // Layer B: Focused Luminous Core Ribbon (Variable Tapering)
-          ctx.beginPath();
-          ctx.moveTo(springNodes[0].currX, springNodes[0].currY);
-          for (let i = 1; i < numDrawn; i++) {
-            const xc = (springNodes[i].currX + springNodes[i - 1].currX) / 2;
-            const yc = (springNodes[i].currY + springNodes[i - 1].currY) / 2;
-            ctx.quadraticCurveTo(springNodes[i - 1].currX, springNodes[i - 1].currY, xc, yc);
-          }
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 2.2;
-          ctx.shadowColor = '#38bdf8';
-          ctx.shadowBlur = 10;
-          ctx.globalAlpha = 0.95;
-          ctx.stroke();
-
-          // 3. Leading Radiant Laser Light Head
-          if (numDrawn < springNodes.length) {
-            const headNode = springNodes[numDrawn - 1];
-            const prevHead = springNodes[Math.max(0, numDrawn - 2)];
-
-            // Outer Radiant Bloom
-            const radGrad = ctx.createRadialGradient(
-              headNode.currX, headNode.currY, 2,
-              headNode.currX, headNode.currY, 26
-            );
-            radGrad.addColorStop(0, '#ffffff');
-            radGrad.addColorStop(0.3, '#38bdf8');
-            radGrad.addColorStop(0.7, 'rgba(0, 242, 254, 0.4)');
-            radGrad.addColorStop(1, 'rgba(0, 242, 254, 0)');
-
-            ctx.beginPath();
-            ctx.arc(headNode.currX, headNode.currY, 26, 0, Math.PI * 2);
-            ctx.fillStyle = radGrad;
-            ctx.globalAlpha = 1.0;
-            ctx.shadowColor = '#00f2fe';
-            ctx.shadowBlur = 24;
-            ctx.fill();
-
-            // Core Hotspot
-            ctx.beginPath();
-            ctx.arc(headNode.currX, headNode.currY, 4.5, 0, Math.PI * 2);
-            ctx.fillStyle = '#ffffff';
-            ctx.shadowColor = '#ffffff';
-            ctx.shadowBlur = 12;
-            ctx.fill();
-          }
-
-          // 4. Drifting Luminescence Sparks along the Spline
-          particles.forEach(p => {
-            p.t = (p.t + p.speed) % 1;
-            if (p.t < currentScrollProgress) {
-              const pIdx = Math.floor(p.t * (springNodes.length - 1));
-              const node = springNodes[pIdx];
-              if (node) {
-                const px = node.currX + Math.sin(time * 3 + pIdx) * p.offset;
-                const py = node.currY;
-
-                ctx.beginPath();
-                ctx.arc(px, py, p.size, 0, Math.PI * 2);
-                ctx.fillStyle = p.color;
-                ctx.shadowColor = p.color;
-                ctx.shadowBlur = 8;
-                ctx.globalAlpha = p.alpha * (0.5 + 0.5 * Math.sin(time * 4 + p.t * 10));
-                ctx.fill();
-              }
-            }
-          });
         }
       }
 
-      ctx.restore();
-      animId = requestAnimationFrame(render);
+      animId = requestAnimationFrame(updateProgress);
     };
 
-    animId = requestAnimationFrame(render);
+    animId = requestAnimationFrame(updateProgress);
 
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('orientationchange', handleResize);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseleave', handleMouseLeave);
       window.removeEventListener('scroll', handleScroll);
       observer.disconnect();
       cancelAnimationFrame(animId);
@@ -394,19 +193,79 @@ export default function LusionConnectingLine() {
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
+    <svg
       style={{
         position: 'absolute',
         top: 0,
         left: 0,
         width: '100%',
-        height: '100%',
+        height: `${dimensions.height}px`,
         pointerEvents: 'none',
         zIndex: 1, // Layered behind cards (cards have z-index: 2+)
-        display: 'block'
+        overflow: 'visible'
       }}
       aria-hidden="true"
-    />
+    >
+      <defs>
+        <linearGradient id="lusionSplineGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.8" />
+          <stop offset="25%" stopColor="#10b981" stopOpacity="0.9" />
+          <stop offset="50%" stopColor="#00f2fe" stopOpacity="1" />
+          <stop offset="75%" stopColor="#ff2a5f" stopOpacity="0.9" />
+          <stop offset="100%" stopColor="#818cf8" stopOpacity="0.85" />
+        </linearGradient>
+
+        <filter id="splineGlow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="6" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+
+        <radialGradient id="headGlow">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+          <stop offset="40%" stopColor="#00f2fe" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="#00f2fe" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+
+      {pathData && (
+        <>
+          {/* Layer A: Ambient Luminescence Glow */}
+          <path
+            ref={glowPathRef}
+            d={pathData}
+            fill="none"
+            stroke="url(#lusionSplineGrad)"
+            strokeWidth="8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity="0.4"
+            filter="url(#splineGlow)"
+          />
+
+          {/* Layer B: Crisp Liquid Core Fiber */}
+          <path
+            ref={pathRef}
+            d={pathData}
+            fill="none"
+            stroke="#ffffff"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity="0.95"
+          />
+
+          {/* Leading Radiant Light Head */}
+          <circle
+            ref={headCircleRef}
+            r="16"
+            fill="url(#headGlow)"
+            style={{ transition: 'opacity 0.2s ease', opacity: 0 }}
+          />
+        </>
+      )}
+    </svg>
   );
 }

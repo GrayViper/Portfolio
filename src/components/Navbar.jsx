@@ -21,11 +21,12 @@ export default function Navbar({ isVideoActive, setIsVideoActive }) {
 
   const navItems = [
     { id: 'hero', num: '01', label: 'RETRO 3D TERMINAL', desc: 'Commodore PET 8296 Interactive Stage' },
-    { id: 'skills', num: '02', label: 'SKILLS & CLOUD MATRIX', desc: 'AWS, Kubernetes, Terraform, Docker, CI/CD, FastAPI' },
-    { id: 'projects', num: '03', label: 'FEATURED PROJECTS', desc: 'Career_Genie, hi_links, Cura-AI-Health' },
-    { id: 'terminal', num: '04', label: 'DEVOPS CLI CONSOLE', desc: 'Interactive Linux & GitOps terminal' },
-    { id: 'certs', num: '05', label: 'EDUCATION & CERTS', desc: 'LPU B.Tech CSE (7.2 CGPA) & Xebia Agentic AI' },
-    { id: 'contact', num: '06', label: 'GET IN TOUCH', desc: 'Hire Me / Contact Chinni Krishna' }
+    { id: 'about', num: '02', label: 'ABOUT ME & COLLABORATE', desc: "3D Lusion Astronaut, Mission Profile & Let's Work Together" },
+    { id: 'skills', num: '03', label: 'SKILLS & CLOUD MATRIX', desc: 'AWS, Kubernetes, Terraform, Docker, CI/CD, FastAPI' },
+    { id: 'projects', num: '04', label: 'FEATURED PROJECTS', desc: 'Career_Genie, hi_links, Cura-AI-Health' },
+    { id: 'terminal', num: '05', label: 'DEVOPS CLI CONSOLE', desc: 'Interactive Linux & GitOps terminal' },
+    { id: 'certs', num: '06', label: 'EDUCATION & CERTS', desc: 'LPU B.Tech CSE (7.2 CGPA) & Xebia Agentic AI' },
+    { id: 'contact', num: '07', label: 'GET IN TOUCH', desc: 'Hire Me / Contact Chinni Krishna' }
   ];
 
   return (
@@ -47,6 +48,7 @@ export default function Navbar({ isVideoActive, setIsVideoActive }) {
         <a
           href="#hero"
           onClick={(e) => handleNavClick(e, 'hero')}
+          data-cursor="HOME"
           style={{
             textDecoration: 'none',
             display: 'flex',
@@ -91,6 +93,7 @@ export default function Navbar({ isVideoActive, setIsVideoActive }) {
           {/* F1 Video Toggle */}
           <button
             onClick={() => setIsVideoActive(!isVideoActive)}
+            data-cursor={isVideoActive ? 'PAUSE' : 'PLAY'}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -116,6 +119,7 @@ export default function Navbar({ isVideoActive, setIsVideoActive }) {
           {/* Minimalist Slide-Out Menu Button (≡) */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
+            data-cursor="MENU"
             style={{
               display: 'inline-flex',
               alignItems: 'center',

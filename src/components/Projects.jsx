@@ -168,6 +168,7 @@ export default function Projects() {
                   href={project.githubUrl}
                   target="_blank"
                   rel="noreferrer"
+                  data-cursor="CODE"
                   className="btn-primary"
                   style={{ padding: '8px 16px', fontSize: '0.82rem', flex: 1, justifyContent: 'center' }}
                 >
@@ -178,10 +179,11 @@ export default function Projects() {
                     href={project.demoUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="btn-secondary"
+                    data-cursor="DEMO"
+                    className="btn-cyan"
                     style={{ padding: '8px 16px', fontSize: '0.82rem', flex: 1, justifyContent: 'center' }}
                   >
-                    <ExternalLink size={14} /> Live Web App
+                    <ExternalLink size={15} /> Live Demo
                   </a>
                 )}
               </div>

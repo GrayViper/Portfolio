@@ -286,6 +286,7 @@ Summary:  Automating cloud infrastructure with Docker, Kubernetes, Terraform, an
             </div>
             <button
               type="submit"
+              data-cursor="RUN"
               className="btn-primary"
               style={{ padding: '0 22px', fontSize: '0.84rem', borderRadius: '12px' }}
             >
@@ -301,6 +302,7 @@ Summary:  Automating cloud infrastructure with Docker, Kubernetes, Terraform, an
             {['skills', 'projects', 'status', 'f1', 'certs', 'whoami', 'clear'].map((cmd) => (
               <button
                 key={cmd}
+                data-cursor="EXEC"
                 onClick={() => executeCommand(cmd)}
                 style={{
                   background: 'rgba(255, 255, 255, 0.04)',

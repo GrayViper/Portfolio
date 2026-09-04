@@ -71,7 +71,7 @@ export default function Contact() {
                   chakkaanil6@gmail.com
                 </span>
               </div>
-              <button onClick={handleCopyEmail} style={{
+              <button onClick={handleCopyEmail} data-cursor="COPY" style={{
                 background: copied ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.06)',
                 border: `1px solid ${copied ? 'var(--terminal-green)' : 'var(--border-subtle)'}`,
                 color: copied ? 'var(--terminal-green)' : 'var(--text-muted)',
@@ -100,10 +100,12 @@ export default function Contact() {
             {/* Social Link Buttons */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <a href="https://github.com/GrayViper" target="_blank" rel="noreferrer"
+                data-cursor="GITHUB"
                 className="btn-primary" style={{ justifyContent: 'center', padding: '11px 14px', fontSize: '0.86rem' }}>
                 <Github size={16} /> @GrayViper on GitHub
               </a>
               <a href="https://www.linkedin.com/in/chinni-krishna8" target="_blank" rel="noreferrer"
+                data-cursor="LINKEDIN"
                 className="btn-secondary" style={{ justifyContent: 'center', padding: '11px 14px', fontSize: '0.86rem' }}>
                 <Linkedin size={16} /> LinkedIn Profile
               </a>
@@ -196,7 +198,7 @@ export default function Contact() {
                   />
                 </div>
 
-                <button type="submit" className="btn-primary" style={{ justifyContent: 'center', marginTop: '4px' }}>
+                <button type="submit" data-cursor="SEND" className="btn-primary" style={{ justifyContent: 'center', marginTop: '4px' }}>
                   <Send size={16} /> Send Message ⚡
                 </button>
               </form>

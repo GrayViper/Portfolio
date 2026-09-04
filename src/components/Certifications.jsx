@@ -89,7 +89,7 @@ export default function Certifications() {
         </div>
 
         {/* ===== XEBIA FEATURED INDUSTRY TRAINING CARD ===== */}
-        <div className="glass-card-web" style={{
+        <div className="glass-card-web" data-cursor="XEBIA" style={{
           padding: '28px', marginBottom: '36px',
           background: 'linear-gradient(135deg, rgba(255, 42, 95, 0.08) 0%, rgba(0, 242, 254, 0.06) 100%)',
           border: '1px solid rgba(255, 42, 95, 0.25)'
@@ -157,11 +157,12 @@ export default function Certifications() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {education.map((edu, i) => (
-                <div key={i} style={{
+                <div key={i} data-cursor="DEGREE" style={{
                   padding: '16px', borderRadius: '14px',
                   background: 'rgba(255,255,255,0.03)',
                   border: '1px solid var(--border-subtle)',
-                  display: 'flex', gap: '12px'
+                  display: 'flex', gap: '12px',
+                  transition: 'all 0.2s ease'
                 }}>
                   <span style={{ fontSize: '1.4rem', flexShrink: 0 }}>{edu.icon}</span>
                   <div>
@@ -184,7 +185,7 @@ export default function Certifications() {
               🏆 Verified Credentials
             </h3>
             {certs.map((cert, idx) => (
-              <div key={idx} className="glass-card-web" style={{
+              <div key={idx} className="glass-card-web" data-cursor="CREDENTIAL" style={{
                 padding: '18px', display: 'flex', gap: '14px', alignItems: 'flex-start',
                 border: `1px solid ${cert.colorBorder}`,
                 background: cert.colorBg

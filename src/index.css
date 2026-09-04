@@ -232,6 +232,32 @@ body {
   color: #ffffff;
 }
 
+.btn-cyan {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 26px;
+  border-radius: 12px;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.90rem;
+  letter-spacing: 0.01em;
+  color: #070a12;
+  background: linear-gradient(135deg, #00f2fe 0%, #38bdf8 100%);
+  border: 1px solid rgba(0, 242, 254, 0.6);
+  box-shadow: 0 8px 25px var(--cyber-cyan-glow);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+}
+
+.btn-cyan:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 35px rgba(0, 242, 254, 0.7);
+  border-color: #ffffff;
+  color: #000000;
+}
+
 /* ===== STAT CARDS ===== */
 .stat-card,
 .f1-stat-card {
