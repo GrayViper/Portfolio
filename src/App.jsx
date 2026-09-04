@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import F1BackgroundVideoEngine from './components/F1BackgroundVideoEngine';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -15,6 +15,39 @@ import Footer from './components/Footer';
 
 export default function App() {
   const [isVideoActive, setIsVideoActive] = useState(true);
+
+  useEffect(() => {
+    // Prevent browser from restoring scroll position on reload
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+
+    // Clear any hash to always show the hero landing page on refresh
+    if (window.location.hash) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+
+    // Immediately scroll to landing page top
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+
+    // Handle edge case where browser attempts delayed scroll restoration
+    const timer = setTimeout(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }, 50);
+
+    const handleBeforeUnload = () => {
+      if (window.location.hash) {
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+      window.scrollTo(0, 0);
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
 
   return (
     <div className="portfolio-app-root">

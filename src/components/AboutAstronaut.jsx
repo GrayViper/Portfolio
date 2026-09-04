@@ -75,24 +75,26 @@ export default function AboutAstronaut() {
               style={{
                 position: 'absolute',
                 top: '16px',
-                right: '16px',
+                left: '50%',
+                transform: 'translateX(-50%)',
                 zIndex: 30,
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                background: 'rgba(7, 10, 18, 0.8)',
+                background: 'rgba(7, 10, 18, 0.85)',
                 backdropFilter: 'blur(12px)',
-                border: '1px solid rgba(0, 243, 255, 0.25)',
+                border: '1px solid rgba(0, 243, 255, 0.3)',
                 borderRadius: '9999px',
-                padding: '4px 10px',
-                fontSize: '0.66rem',
+                padding: '4px 14px',
+                fontSize: '0.68rem',
                 fontFamily: 'var(--font-mono)',
                 color: 'var(--cyber-cyan)',
-                fontWeight: 700
+                fontWeight: 700,
+                whiteSpace: 'nowrap'
               }}
             >
               <Sparkles size={11} />
-              <span>3D ZERO-G SIMULATION</span>
+              <span>PILOT: CHAKKA CHINNI KRISHNA (@GRAYVIPER)</span>
             </div>
 
             {/* Embedded 3D Astronaut Canvas */}
@@ -114,7 +116,7 @@ export default function AboutAstronaut() {
                 letterSpacing: '0.04em'
               }}
             >
-              MOVE CURSOR TO TRACK • DRAG TO ROTATE • TEST THRUSTERS &amp; SHATTER
+              MOVE CURSOR TO TRACK • DRAG TO ROTATE • REPLAY ANIMATION ANYTIME
             </div>
           </div>
 

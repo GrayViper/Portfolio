@@ -1,43 +1,45 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { Volume2, VolumeX, Sparkles, RefreshCw, Eye, Flame } from 'lucide-react';
+import { Volume2, VolumeX, Play, RefreshCw, Camera, RotateCcw } from 'lucide-react';
 
 /**
  * LusionAstronaut3D Component - Authentic Lusion.co Interactive 3D Astronaut Engine
+ * With Custom Astronaut Face Integration & Cinematic Particle Assembly Sequence
  *
- * Technical Highlights:
- * - 3D GLTF Astronaut Engine with procedural PBR materials and gold chrome visor
- * - Weightless Zero-Gravity Physics (harmonic drift, bobbing, inertia-damped mouse parallax)
- * - Interactive 360° Orbit Dragging (touch & mouse)
- * - Scroll-Bound Trajectory & acrobatic perspective shift
- * - Lusion Signature FX:
- *     1. Thruster Plasma Exhaust (interactive backpack jetpack booster)
- *     2. Hologram Particle Shatter & Magnetic Reassembly
- *     3. Zero-G 360° Acrobatic Spin
- *     4. Ambient Cosmic Stardust Field
- * - Web Audio API deep space ambient hum and thruster bursts
+ * Cinematic Sequence:
+ * 1. Starts fully made up of shattered particles dispersed in 3D deep space
+ * 2. Particles magnetically vortex & assemble into the exact 3D astronaut form
+ * 3. Astronaut executes a dynamic 360° orbital roll with banking roll
+ * 4. Twin backpack plasma thrusters erupt with forward surge & exhaust
+ * 5. Smoothly settles into weightless zero-gravity floating with interactive orbit tracking
  */
 export default function LusionAstronaut3D({
   isFullScreen = false,
   showTelemetryOverlay = true,
   showActionButtons = true,
   height = '560px',
-  className = ''
+  className = '',
+  initialFaceUrl = '/profile.png'
 }) {
   const mountRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const recenterRef = useRef(null);
 
   // Component UI States
   const [loadProgress, setLoadProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [activeAction, setActiveAction] = useState('float'); // 'float' | 'thruster' | 'spin' | 'shatter'
+  const [activeAction, setActiveAction] = useState('sequence'); // 'sequence' | 'float' | 'thruster' | 'spin' | 'shatter'
   const [soundEnabled, setSoundEnabled] = useState(false);
+  const [faceUrl, setFaceUrl] = useState(() => {
+    return localStorage.getItem('grayviper_face_photo') || initialFaceUrl;
+  });
   const [telemetry, setTelemetry] = useState({
     pitch: '0.0°',
     yaw: '0.0°',
     velocity: '0.04 m/s',
     thruster: 'STANDBY',
-    status: 'SYSTEMS NOMINAL'
+    status: 'PARTICLE ASSEMBLY'
   });
 
   // Audio Context Refs
@@ -56,18 +58,52 @@ export default function LusionAstronaut3D({
 
       const now = ctx.currentTime;
 
-      if (type === 'thruster') {
+      if (type === 'assemble') {
+        // Quantum rising synthesis with resonant harmonic shimmer
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const filter = ctx.createBiquadFilter();
+        const gain = ctx.createGain();
+
+        osc1.type = 'sawtooth';
+        osc1.frequency.setValueAtTime(105, now);
+        osc1.frequency.exponentialRampToValueAtTime(780, now + 1.8);
+
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(210, now);
+        osc2.frequency.exponentialRampToValueAtTime(1560, now + 1.8);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(320, now);
+        filter.frequency.exponentialRampToValueAtTime(3800, now + 1.7);
+        filter.Q.setValueAtTime(3.5, now);
+
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(0.18, now + 0.35);
+        gain.gain.setValueAtTime(0.18, now + 1.4);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 2.0);
+
+        osc1.connect(filter);
+        osc2.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 2.0);
+        osc2.stop(now + 2.0);
+      } else if (type === 'thruster') {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(80, now);
-        osc.frequency.exponentialRampToValueAtTime(45, now + 0.6);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+        osc.frequency.exponentialRampToValueAtTime(45, now + 0.8);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start(now);
-        osc.stop(now + 0.6);
+        osc.stop(now + 0.8);
       } else if (type === 'shatter') {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
@@ -86,22 +122,53 @@ export default function LusionAstronaut3D({
         const gain = ctx.createGain();
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(180, now);
-        osc.frequency.exponentialRampToValueAtTime(320, now + 0.3);
-        osc.frequency.exponentialRampToValueAtTime(120, now + 0.8);
-        gain.gain.setValueAtTime(0.15, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
+        osc.frequency.exponentialRampToValueAtTime(320, now + 0.4);
+        osc.frequency.exponentialRampToValueAtTime(120, now + 0.95);
+        gain.gain.setValueAtTime(0.16, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 1.0);
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start(now);
-        osc.stop(now + 0.85);
+        osc.stop(now + 1.0);
       }
     } catch {
       // Audio fallback
     }
   }, [soundEnabled]);
 
+  // Handle Photo Upload
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const resultUrl = event.target.result;
+        setFaceUrl(resultUrl);
+        try {
+          localStorage.setItem('grayviper_face_photo', resultUrl);
+        } catch {
+          // Quota fallback
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleResetFace = (e) => {
+    e.stopPropagation();
+    localStorage.removeItem('grayviper_face_photo');
+    setFaceUrl(initialFaceUrl);
+  };
+
   // Action Triggers exposed to UI
   const triggerActionRef = useRef(null);
+  const updateFaceTextureRef = useRef(null);
+
+  useEffect(() => {
+    if (updateFaceTextureRef.current) {
+      updateFaceTextureRef.current(faceUrl);
+    }
+  }, [faceUrl]);
 
   useEffect(() => {
     const container = mountRef.current;
@@ -147,11 +214,61 @@ export default function LusionAstronaut3D({
     amberRimLight.position.set(4, -3, -2);
     scene.add(amberRimLight);
 
-    const visorGlowLight = new THREE.PointLight(0x00f3ff, 1.2, 3.5);
-    visorGlowLight.position.set(0, 0.8, 1.2);
-    scene.add(visorGlowLight);
+    // Dynamic environment map for reflection
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    pmremGenerator.compileEquirectangularShader();
 
-    // --- 3. Cosmic Space Environment ---
+    const envCanvas = document.createElement('canvas');
+    envCanvas.width = 512;
+    envCanvas.height = 256;
+    const envCtx = envCanvas.getContext('2d');
+    const envGrad = envCtx.createLinearGradient(0, 0, 512, 256);
+    envGrad.addColorStop(0, '#001a33');
+    envGrad.addColorStop(0.3, '#00f3ff');
+    envGrad.addColorStop(0.7, '#ffaa00');
+    envGrad.addColorStop(1, '#1a0033');
+    envCtx.fillStyle = envGrad;
+    envCtx.fillRect(0, 0, 512, 256);
+    const dynamicEnvTexture = new THREE.CanvasTexture(envCanvas);
+    dynamicEnvTexture.mapping = THREE.EquirectangularReflectionMapping;
+
+    // --- 3. Soft Particle Canvas Sprites ---
+    const createParticleTexture = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      grad.addColorStop(0.25, 'rgba(0, 243, 255, 0.95)');
+      grad.addColorStop(0.55, 'rgba(0, 160, 255, 0.35)');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 64, 64);
+      const tex = new THREE.CanvasTexture(canvas);
+      return tex;
+    };
+
+    const createThrusterTexture = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      grad.addColorStop(0.25, 'rgba(0, 243, 255, 0.95)');
+      grad.addColorStop(0.6, 'rgba(255, 170, 0, 0.6)');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 64, 64);
+      const tex = new THREE.CanvasTexture(canvas);
+      return tex;
+    };
+
+    const particleTexture = createParticleTexture();
+    const thrusterTexture = createThrusterTexture();
+
+    // --- 4. Cosmic Space Environment ---
     const starCount = 500;
     const starGeometry = new THREE.BufferGeometry();
     const starPositions = new Float32Array(starCount * 3);
@@ -190,75 +307,148 @@ export default function LusionAstronaut3D({
     const starField = new THREE.Points(starGeometry, starMaterial);
     scene.add(starField);
 
-    // --- 4. Hologram Shatter Particle Cloud ---
-    const shatterCount = 1200;
-    const shatterGeo = new THREE.BufferGeometry();
-    const shatterOriginPos = new Float32Array(shatterCount * 3);
-    const shatterCurrentPos = new Float32Array(shatterCount * 3);
-    const shatterVelocities = new Float32Array(shatterCount * 3);
+    // --- 5. Shattered Particles & Quantum Assembly Cloud (3,500 particles) ---
+    const assembleCount = 3500;
+    const assembleGeo = new THREE.BufferGeometry();
+    const assembleCurrentPos = new Float32Array(assembleCount * 3);
+    const assembleTargetPos = new Float32Array(assembleCount * 3);
+    const assembleShatterPos = new Float32Array(assembleCount * 3);
+    const assembleColors = new Float32Array(assembleCount * 3);
+    const assembleDelays = new Float32Array(assembleCount);
+    const assembleCurves = new Float32Array(assembleCount);
 
-    for (let i = 0; i < shatterCount; i++) {
+    // Seed realistic procedural astronaut silhouette as default targets
+    for (let i = 0; i < assembleCount; i++) {
       const idx = i * 3;
-      const u = Math.random();
-      const v = Math.random();
-      const theta = u * 2.0 * Math.PI;
-      const phi = Math.acos(2.0 * v - 1.0);
-      const r = Math.cbrt(Math.random()) * 0.9;
-      const sinPhi = Math.sin(phi);
+      assembleDelays[i] = (i / assembleCount) * 0.45 + Math.random() * 0.15;
+      assembleCurves[i] = Math.random() * Math.PI * 2;
 
-      const x = r * sinPhi * Math.cos(theta);
-      const y = (r * Math.cos(phi) * 1.5) - 0.1;
-      const z = r * sinPhi * Math.sin(theta);
+      let tx = 0, ty = 0, tz = 0;
+      const part = Math.random();
 
-      shatterOriginPos[idx] = x;
-      shatterOriginPos[idx + 1] = y;
-      shatterOriginPos[idx + 2] = z;
+      if (part < 0.22) {
+        // Head / Helmet
+        const u = Math.random(), v = Math.random();
+        const theta = u * 2 * Math.PI;
+        const phi = Math.acos(2 * v - 1);
+        const r = 0.24 * Math.cbrt(Math.random());
+        tx = r * Math.sin(phi) * Math.cos(theta);
+        ty = 1.62 + r * Math.cos(phi);
+        tz = 0.18 + r * Math.sin(phi) * Math.sin(theta);
+      } else if (part < 0.55) {
+        // Torso & Life Support Pack
+        tx = (Math.random() - 0.5) * 0.6;
+        ty = 0.85 + Math.random() * 0.65;
+        tz = (Math.random() - 0.5) * 0.45;
+      } else if (part < 0.78) {
+        // Arms
+        const side = Math.random() > 0.5 ? 1 : -1;
+        tx = side * (0.32 + Math.random() * 0.35);
+        ty = 0.8 + Math.random() * 0.6;
+        tz = (Math.random() - 0.5) * 0.25;
+      } else {
+        // Legs & Boots
+        const side = Math.random() > 0.5 ? 1 : -1;
+        tx = side * (0.12 + Math.random() * 0.2);
+        ty = 0.05 + Math.random() * 0.8;
+        tz = (Math.random() - 0.5) * 0.25;
+      }
 
-      shatterCurrentPos[idx] = x;
-      shatterCurrentPos[idx + 1] = y;
-      shatterCurrentPos[idx + 2] = z;
+      assembleTargetPos[idx] = tx;
+      assembleTargetPos[idx + 1] = ty;
+      assembleTargetPos[idx + 2] = tz;
 
-      shatterVelocities[idx] = x * 2.5 + (Math.random() - 0.5) * 1.2;
-      shatterVelocities[idx + 1] = y * 2.2 + (Math.random() - 0.5) * 1.2;
-      shatterVelocities[idx + 2] = z * 2.5 + (Math.random() - 0.5) * 1.2;
+      // Shattered positions: exploded in 3D deep space
+      const dist = 2.4 + Math.random() * 3.6;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = (Math.random() - 0.5) * Math.PI;
+      const sx = tx + Math.cos(theta) * Math.cos(phi) * dist + (Math.random() - 0.5) * 2.2;
+      const sy = ty + Math.sin(phi) * dist + (Math.random() - 0.5) * 2.2;
+      const sz = tz + Math.sin(theta) * Math.cos(phi) * dist + (Math.random() - 0.5) * 2.2;
+
+      assembleShatterPos[idx] = sx;
+      assembleShatterPos[idx + 1] = sy;
+      assembleShatterPos[idx + 2] = sz;
+
+      assembleCurrentPos[idx] = sx;
+      assembleCurrentPos[idx + 1] = sy;
+      assembleCurrentPos[idx + 2] = sz;
+
+      // Color coding (cyber cyan, neon white, amber thruster/boot accents)
+      if (ty > 1.45) {
+        assembleColors[idx] = 0.0;
+        assembleColors[idx + 1] = 0.95;
+        assembleColors[idx + 2] = 1.0;
+      } else if (Math.random() > 0.72) {
+        assembleColors[idx] = 1.0;
+        assembleColors[idx + 1] = 1.0;
+        assembleColors[idx + 2] = 1.0;
+      } else if (Math.random() > 0.45) {
+        assembleColors[idx] = 1.0;
+        assembleColors[idx + 1] = 0.7;
+        assembleColors[idx + 2] = 0.15;
+      } else {
+        assembleColors[idx] = 0.0;
+        assembleColors[idx + 1] = 0.75;
+        assembleColors[idx + 2] = 1.0;
+      }
     }
-    shatterGeo.setAttribute('position', new THREE.BufferAttribute(shatterCurrentPos, 3));
 
-    const shatterMaterial = new THREE.PointsMaterial({
-      color: 0x00f3ff,
-      size: 0.045,
+    assembleGeo.setAttribute('position', new THREE.BufferAttribute(assembleCurrentPos, 3));
+    assembleGeo.setAttribute('color', new THREE.BufferAttribute(assembleColors, 3));
+
+    const assembleMaterial = new THREE.PointsMaterial({
+      size: 0.055,
+      map: particleTexture,
+      vertexColors: true,
       transparent: true,
-      opacity: 0,
+      opacity: 0.95,
+      depthWrite: false,
       blending: THREE.AdditiveBlending
     });
-    const shatterParticles = new THREE.Points(shatterGeo, shatterMaterial);
-    scene.add(shatterParticles);
+    const assembleMesh = new THREE.Points(assembleGeo, assembleMaterial);
+    scene.add(assembleMesh);
 
-    // --- 5. Thruster Plasma Particle System ---
-    const thrusterCount = 100;
+    // --- 6. Thruster Plasma Particle System (Twin Jet Backpack Nozzles) ---
+    const thrusterCount = 180;
     const thrusterGeo = new THREE.BufferGeometry();
     const thrusterPositions = new Float32Array(thrusterCount * 3);
+    const thrusterColors = new Float32Array(thrusterCount * 3);
     const thrusterLifetimes = new Float32Array(thrusterCount);
 
     for (let i = 0; i < thrusterCount; i++) {
-      thrusterPositions[i * 3] = 0;
-      thrusterPositions[i * 3 + 1] = 0;
-      thrusterPositions[i * 3 + 2] = 0;
+      const idx = i * 3;
+      thrusterPositions[idx] = 0;
+      thrusterPositions[idx + 1] = 0;
+      thrusterPositions[idx + 2] = 0;
       thrusterLifetimes[i] = Math.random();
+
+      if (Math.random() > 0.4) {
+        thrusterColors[idx] = 0.0;
+        thrusterColors[idx + 1] = 0.95;
+        thrusterColors[idx + 2] = 1.0;
+      } else {
+        thrusterColors[idx] = 1.0;
+        thrusterColors[idx + 1] = 0.65;
+        thrusterColors[idx + 2] = 0.1;
+      }
     }
     thrusterGeo.setAttribute('position', new THREE.BufferAttribute(thrusterPositions, 3));
+    thrusterGeo.setAttribute('color', new THREE.BufferAttribute(thrusterColors, 3));
 
     const thrusterMaterial = new THREE.PointsMaterial({
-      color: 0x00f3ff,
-      size: 0.08,
+      size: 0.09,
+      map: thrusterTexture,
+      vertexColors: true,
       transparent: true,
       opacity: 0,
+      depthWrite: false,
       blending: THREE.AdditiveBlending
     });
     const thrusterMesh = new THREE.Points(thrusterGeo, thrusterMaterial);
     scene.add(thrusterMesh);
 
-    // --- 6. Astronaut Model Group & Rigging ---
+    // --- 7. Astronaut Model Group & Rigging ---
     const astronautGroup = new THREE.Group();
     scene.add(astronautGroup);
 
@@ -266,23 +456,108 @@ export default function LusionAstronaut3D({
     let mixer = null;
     const suitMeshes = [];
 
-    const pmremGenerator = new THREE.PMREMGenerator(renderer);
-    pmremGenerator.compileEquirectangularShader();
+    // Face Texture Loader & Material
+    const textureLoader = new THREE.TextureLoader();
 
-    const envCanvas = document.createElement('canvas');
-    envCanvas.width = 512;
-    envCanvas.height = 256;
-    const envCtx = envCanvas.getContext('2d');
-    const envGrad = envCtx.createLinearGradient(0, 0, 512, 256);
-    envGrad.addColorStop(0, '#001a33');
-    envGrad.addColorStop(0.3, '#00f3ff');
-    envGrad.addColorStop(0.7, '#ffaa00');
-    envGrad.addColorStop(1, '#1a0033');
-    envCtx.fillStyle = envGrad;
-    envCtx.fillRect(0, 0, 512, 256);
-    const dynamicEnvTexture = new THREE.CanvasTexture(envCanvas);
-    dynamicEnvTexture.mapping = THREE.EquirectangularReflectionMapping;
+    const faceGeo = new THREE.CircleGeometry(0.22, 48);
+    const faceMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      side: THREE.DoubleSide,
+      transparent: true,
+      depthWrite: true
+    });
+    const faceMesh = new THREE.Mesh(faceGeo, faceMat);
 
+    // Helmet Bezel Ring surrounding the face
+    const bezelGeo = new THREE.RingGeometry(0.21, 0.25, 48);
+    const bezelMat = new THREE.MeshStandardMaterial({
+      color: 0x00f3ff,
+      emissive: 0x0088aa,
+      emissiveIntensity: 0.8,
+      metalness: 0.9,
+      roughness: 0.2
+    });
+    const bezelMesh = new THREE.Mesh(bezelGeo, bezelMat);
+    bezelMesh.position.z = 0.005;
+
+    // Curved outer tinted visor glass
+    const visorGlassGeo = new THREE.SphereGeometry(0.255, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.45);
+    const visorGlassMat = new THREE.MeshPhysicalMaterial({
+      color: 0x112233,
+      transparent: true,
+      opacity: 0.25,
+      roughness: 0.05,
+      metalness: 0.1,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.05,
+      transmission: 0.75,
+      reflectivity: 1.0,
+      envMap: dynamicEnvTexture,
+      envMapIntensity: 2.5
+    });
+    const visorGlassMesh = new THREE.Mesh(visorGlassGeo, visorGlassMat);
+    visorGlassMesh.position.set(0, 0, 0.02);
+    visorGlassMesh.rotation.x = Math.PI / 2;
+
+    // Internal Helmet Warm/Cyan Illumination
+    const helmetFaceLight = new THREE.PointLight(0xffeedd, 1.8, 1.2);
+    helmetFaceLight.position.set(0, 0.05, 0.25);
+
+    // Group for the entire Face Portal
+    const facePortalGroup = new THREE.Group();
+    facePortalGroup.add(faceMesh);
+    facePortalGroup.add(bezelMesh);
+    facePortalGroup.add(visorGlassMesh);
+    facePortalGroup.add(helmetFaceLight);
+    facePortalGroup.visible = false;
+
+    // Apply face texture update
+    const loadFaceTexture = (url) => {
+      textureLoader.load(
+        url,
+        (tex) => {
+          tex.colorSpace = THREE.SRGBColorSpace;
+          tex.wrapS = THREE.ClampToEdgeWrapping;
+          tex.wrapT = THREE.ClampToEdgeWrapping;
+          tex.generateMipmaps = true;
+          tex.minFilter = THREE.LinearMipmapLinearFilter;
+          faceMat.map = tex;
+          faceMat.needsUpdate = true;
+        },
+        undefined,
+        (err) => {
+          console.warn('Could not load face texture:', err);
+        }
+      );
+    };
+
+    updateFaceTextureRef.current = loadFaceTexture;
+    loadFaceTexture(faceUrl);
+
+    // Viewport Intersection Observer: Trigger sequence naturally when user scrolls to astronaut
+    let hasPlayedInView = false;
+    let isModelReady = false;
+
+    const startSequenceIfReady = () => {
+      if (isModelReady && triggerActionRef.current) {
+        hasPlayedInView = true;
+        triggerActionRef.current('sequence');
+      }
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !hasPlayedInView) {
+            startSequenceIfReady();
+          }
+        });
+      },
+      { threshold: 0.25 }
+    );
+    observer.observe(container);
+
+    // Load Astronaut.glb
     const loader = new GLTFLoader();
     loader.load(
       '/Astronaut.glb',
@@ -306,30 +581,18 @@ export default function LusionAstronaut3D({
             child.receiveShadow = true;
             suitMeshes.push(child);
 
-            const matName = (child.material?.name || '').toLowerCase();
-            const meshName = (child.name || '').toLowerCase();
-
-            if (matName.includes('visor') || meshName.includes('visor') || matName.includes('glass')) {
-              child.material = new THREE.MeshPhysicalMaterial({
-                color: 0x111111,
-                emissive: 0x002233,
-                metalness: 0.95,
-                roughness: 0.05,
-                clearcoat: 1.0,
-                clearcoatRoughness: 0.05,
-                reflectivity: 1.0,
-                envMap: dynamicEnvTexture,
-                envMapIntensity: 2.5
-              });
-            } else {
-              if (child.material) {
-                child.material.envMap = dynamicEnvTexture;
-                child.material.envMapIntensity = 0.8;
-                child.material.roughness = THREE.MathUtils.clamp(child.material.roughness || 0.6, 0.35, 0.7);
-              }
+            if (child.material) {
+              child.material.envMap = dynamicEnvTexture;
+              child.material.envMapIntensity = 0.8;
+              child.material.roughness = THREE.MathUtils.clamp(child.material.roughness || 0.6, 0.35, 0.7);
             }
           }
         });
+
+        // Exact Centroid Position of Helmet Visor in Astronaut Model Space
+        facePortalGroup.position.set(0, 1.63, 0.32);
+        facePortalGroup.rotation.x = THREE.MathUtils.degToRad(8);
+        astronautModel.add(facePortalGroup);
 
         if (gltf.animations && gltf.animations.length > 0) {
           mixer = new THREE.AnimationMixer(astronautModel);
@@ -338,9 +601,81 @@ export default function LusionAstronaut3D({
           action.play();
         }
 
+        // Sample real 3D mesh vertices to populate particle targets with model accuracy
+        astronautModel.updateMatrixWorld(true);
+        const allVerts = [];
+        const allNorms = [];
+        const tempV = new THREE.Vector3();
+        const tempN = new THREE.Vector3();
+
+        suitMeshes.forEach((mesh) => {
+          const geom = mesh.geometry;
+          if (geom && geom.attributes.position) {
+            const posAttr = geom.attributes.position;
+            const normAttr = geom.attributes.normal;
+            const step = Math.max(1, Math.floor(posAttr.count / 650));
+            for (let v = 0; v < posAttr.count; v += step) {
+              tempV.fromBufferAttribute(posAttr, v);
+              tempV.applyMatrix4(mesh.matrixWorld);
+              astronautGroup.worldToLocal(tempV);
+
+              if (normAttr) {
+                tempN.fromBufferAttribute(normAttr, v);
+                tempN.transformDirection(mesh.matrixWorld);
+              } else {
+                tempN.set(0, 1, 0);
+              }
+              allVerts.push(tempV.clone());
+              allNorms.push(tempN.clone());
+            }
+          }
+        });
+
+        if (allVerts.length > 100) {
+          for (let i = 0; i < assembleCount; i++) {
+            const vert = allVerts[i % allVerts.length];
+            const norm = allNorms[i % allNorms.length];
+            const idx = i * 3;
+
+            assembleTargetPos[idx] = vert.x;
+            assembleTargetPos[idx + 1] = vert.y;
+            assembleTargetPos[idx + 2] = vert.z;
+
+            // Explode outward in 3D deep space for shattered initial state
+            const dist = 2.4 + Math.random() * 3.4;
+            assembleShatterPos[idx] = vert.x + norm.x * dist + (Math.random() - 0.5) * 2.2;
+            assembleShatterPos[idx + 1] = vert.y + norm.y * dist + (Math.random() - 0.5) * 2.2;
+            assembleShatterPos[idx + 2] = vert.z + norm.z * dist + (Math.random() - 0.5) * 2.2;
+
+            assembleCurrentPos[idx] = assembleShatterPos[idx];
+            assembleCurrentPos[idx + 1] = assembleShatterPos[idx + 1];
+            assembleCurrentPos[idx + 2] = assembleShatterPos[idx + 2];
+          }
+          assembleGeo.attributes.position.needsUpdate = true;
+        }
+
+        // Astronaut begins fully made up of shattered particles
+        suitMeshes.forEach((mesh) => {
+          if (mesh.material) {
+            mesh.material.transparent = true;
+            mesh.material.opacity = 0;
+          }
+        });
+        facePortalGroup.visible = false;
+
         astronautGroup.add(astronautModel);
         setIsLoaded(true);
         setLoadProgress(100);
+
+        isModelReady = true;
+        const rect = container.getBoundingClientRect();
+        const inView = rect.top < window.innerHeight && rect.bottom > 0;
+        if (inView && !hasPlayedInView) {
+          hasPlayedInView = true;
+          if (triggerActionRef.current) {
+            triggerActionRef.current('sequence');
+          }
+        }
       },
       (xhr) => {
         if (xhr.total > 0) {
@@ -350,13 +685,12 @@ export default function LusionAstronaut3D({
         }
       },
       () => {
-        // Fallback procedural
         setIsLoaded(true);
         setLoadProgress(100);
       }
     );
 
-    // --- 7. Mouse Cursor Parallax & Orbit Drag ---
+    // --- 8. Mouse Cursor Parallax & Orbit Drag ---
     const mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
     const drag = {
       isDragging: false,
@@ -400,33 +734,68 @@ export default function LusionAstronaut3D({
     container.addEventListener('pointerdown', onPointerDown);
     window.addEventListener('pointerup', onPointerUp);
 
-    // --- 8. Action State Machine ---
+    recenterRef.current = () => {
+      drag.targetRotX = 0;
+      drag.targetRotY = 0;
+      drag.rotX = 0;
+      drag.rotY = 0;
+    };
+
+    // --- 9. Action State Machine ---
     let actionState = {
-      type: 'float',
+      type: 'sequence',
       timer: 0,
       spinAngle: 0,
       shatterProgress: 0,
-      thrusterPower: 0
+      thrusterPower: 0,
+      spinSoundPlayed: false,
+      thrustSoundPlayed: false
     };
 
     triggerActionRef.current = (type) => {
       setActiveAction(type);
       actionState.type = type;
       actionState.timer = 0;
+      actionState.spinSoundPlayed = false;
+      actionState.thrustSoundPlayed = false;
 
-      if (type === 'thruster') {
+      if (type === 'sequence') {
+        playSoundEffect('assemble');
+        for (let i = 0; i < assembleCount * 3; i++) {
+          assembleCurrentPos[i] = assembleShatterPos[i];
+        }
+        assembleGeo.attributes.position.needsUpdate = true;
+        assembleMaterial.opacity = 0.95;
+
+        suitMeshes.forEach((m) => {
+          if (m.material) {
+            m.material.transparent = true;
+            m.material.opacity = 0;
+          }
+        });
+        facePortalGroup.visible = false;
+        astronautGroup.position.z = 0;
+      } else if (type === 'thruster') {
         actionState.thrusterPower = 1.0;
         playSoundEffect('thruster');
-        thrusterMaterial.opacity = 0.9;
+        thrusterMaterial.opacity = 0.95;
       } else if (type === 'spin') {
         playSoundEffect('spin');
       } else if (type === 'shatter') {
         actionState.shatterProgress = 0.01;
         playSoundEffect('shatter');
+      } else if (type === 'float') {
+        suitMeshes.forEach((m) => {
+          if (m.material) m.material.opacity = 1.0;
+        });
+        facePortalGroup.visible = true;
+        assembleMaterial.opacity = 0;
+        thrusterMaterial.opacity = 0;
+        astronautGroup.position.z = 0;
       }
     };
 
-    // --- 9. Real-time 60 FPS Render Loop ---
+    // --- 10. Real-time 60 FPS Render Loop ---
     let animationFrameId;
     let clock = new THREE.Clock();
     let telemetryTimer = 0;
@@ -456,10 +825,126 @@ export default function LusionAstronaut3D({
       const rollOffset = Math.sin(elapsed * 0.8) * 0.08;
       const yawOffset = Math.cos(elapsed * 0.9) * 0.06;
 
-      astronautGroup.position.y = floatOffset;
-      astronautGroup.position.x = mouse.x * 0.22;
+      if (actionState.type === 'sequence') {
+        actionState.timer += delta;
+        const t = actionState.timer;
 
-      if (actionState.type === 'spin') {
+        if (t < 2.4) {
+          // --- Phase 1: Shattered Particle Assembly ---
+          const posArr = assembleGeo.attributes.position.array;
+          for (let i = 0; i < assembleCount; i++) {
+            const idx = i * 3;
+            const delay = assembleDelays[i];
+            const p = THREE.MathUtils.clamp((t - delay) / 1.35, 0, 1);
+            const ease = 1 - Math.pow(1 - p, 3.5);
+
+            const swirl = (1 - ease) * 0.45;
+            const angle = assembleCurves[i] + t * 3.5;
+
+            posArr[idx] = THREE.MathUtils.lerp(assembleShatterPos[idx], assembleTargetPos[idx], ease) + Math.cos(angle) * swirl;
+            posArr[idx + 1] = THREE.MathUtils.lerp(assembleShatterPos[idx + 1], assembleTargetPos[idx + 1], ease) + Math.sin(angle) * swirl;
+            posArr[idx + 2] = THREE.MathUtils.lerp(assembleShatterPos[idx + 2], assembleTargetPos[idx + 2], ease);
+          }
+          assembleGeo.attributes.position.needsUpdate = true;
+
+          if (t < 1.8) {
+            assembleMaterial.opacity = 0.95;
+          } else {
+            assembleMaterial.opacity = THREE.MathUtils.clamp((2.4 - t) / 0.6 * 0.95, 0, 0.95);
+          }
+
+          if (t < 1.3) {
+            suitMeshes.forEach((m) => { if (m.material) m.material.opacity = 0; });
+            facePortalGroup.visible = false;
+          } else {
+            const meshAlpha = THREE.MathUtils.clamp((t - 1.3) / 0.9, 0, 1.0);
+            suitMeshes.forEach((m) => {
+              if (m.material) {
+                m.material.transparent = true;
+                m.material.opacity = meshAlpha;
+              }
+            });
+            facePortalGroup.visible = t > 1.6;
+          }
+
+          astronautGroup.position.y = floatOffset;
+          astronautGroup.position.x = mouse.x * 0.15;
+          astronautGroup.rotation.y = THREE.MathUtils.lerp(astronautGroup.rotation.y, drag.rotY, 0.05);
+          astronautGroup.rotation.x = THREE.MathUtils.lerp(astronautGroup.rotation.x, drag.rotX, 0.05);
+          astronautGroup.rotation.z = 0;
+
+        } else if (t < 3.8) {
+          // --- Phase 2: 360° Orbital Spin ---
+          if (!actionState.spinSoundPlayed) {
+            actionState.spinSoundPlayed = true;
+            playSoundEffect('spin');
+          }
+
+          assembleMaterial.opacity = 0;
+          suitMeshes.forEach((m) => { if (m.material) m.material.opacity = 1.0; });
+          facePortalGroup.visible = true;
+
+          const spinProgress = (t - 2.4) / 1.4;
+          const smooth = spinProgress * spinProgress * (3 - 2 * spinProgress);
+          const spinAngle = smooth * Math.PI * 2;
+
+          astronautGroup.rotation.y = spinAngle + drag.rotY;
+          astronautGroup.rotation.z = Math.sin(spinProgress * Math.PI) * 0.32;
+          astronautGroup.rotation.x = Math.sin(spinProgress * Math.PI * 2) * 0.15 + drag.rotX;
+          astronautGroup.position.y = floatOffset;
+          astronautGroup.position.x = mouse.x * 0.15;
+
+        } else if (t < 5.2) {
+          // --- Phase 3: Forward Thruster Boost ---
+          if (!actionState.thrustSoundPlayed) {
+            actionState.thrustSoundPlayed = true;
+            playSoundEffect('thruster');
+          }
+
+          const thrustProgress = (t - 3.8) / 1.4;
+          let power = 1.0;
+          if (thrustProgress < 0.15) power = thrustProgress / 0.15;
+          else if (thrustProgress > 0.7) power = (1.0 - thrustProgress) / 0.3;
+
+          astronautGroup.rotation.x = -0.32 * power + drag.rotX;
+          astronautGroup.rotation.z = mouse.x * -0.15;
+          astronautGroup.rotation.y = drag.rotY;
+
+          astronautGroup.position.z = power * 0.42 + Math.sin(t * 26.0) * 0.02 * power;
+          astronautGroup.position.y = floatOffset + power * 0.1;
+          astronautGroup.position.x = mouse.x * 0.15;
+
+          const pos = thrusterGeo.attributes.position.array;
+          for (let i = 0; i < thrusterCount; i++) {
+            const idx = i * 3;
+            thrusterLifetimes[i] += delta * 3.8;
+            if (thrusterLifetimes[i] > 1.0) {
+              thrusterLifetimes[i] = 0;
+              const isLeft = (i % 2 === 0);
+              pos[idx] = (isLeft ? -0.16 : 0.16) + (Math.random() - 0.5) * 0.08;
+              pos[idx + 1] = 0.02 + (Math.random() - 0.5) * 0.08;
+              pos[idx + 2] = -0.28;
+            } else {
+              pos[idx + 2] -= delta * 5.2;
+              pos[idx + 1] -= delta * 0.6;
+              const isLeft = (i % 2 === 0);
+              pos[idx] += (isLeft ? -1 : 1) * delta * 0.2 + (Math.random() - 0.5) * 0.04;
+            }
+          }
+          thrusterGeo.attributes.position.needsUpdate = true;
+          thrusterMaterial.opacity = power * 0.95;
+
+        } else {
+          // --- Phase 4: Settle into Weightless Floating ---
+          actionState.type = 'float';
+          setActiveAction('float');
+          thrusterMaterial.opacity = 0;
+          astronautGroup.position.z = 0;
+          suitMeshes.forEach((m) => { if (m.material) m.material.opacity = 1.0; });
+          facePortalGroup.visible = true;
+        }
+
+      } else if (actionState.type === 'spin') {
         actionState.timer += delta * 4.5;
         actionState.spinAngle = actionState.timer;
         astronautGroup.rotation.y = actionState.spinAngle + drag.rotY;
@@ -470,30 +955,32 @@ export default function LusionAstronaut3D({
           setActiveAction('float');
           actionState.spinAngle = 0;
         }
+
       } else if (actionState.type === 'thruster') {
         actionState.timer += delta;
         actionState.thrusterPower = Math.max(0, 1.0 - actionState.timer * 0.8);
 
-        astronautGroup.position.z = Math.sin(actionState.timer * 10) * 0.04 + actionState.thrusterPower * 0.3;
+        astronautGroup.position.z = Math.sin(actionState.timer * 10) * 0.04 + actionState.thrusterPower * 0.35;
         astronautGroup.rotation.x = (mouse.y * 0.4) - 0.25;
 
         const positions = thrusterGeo.attributes.position.array;
         for (let i = 0; i < thrusterCount; i++) {
           const idx = i * 3;
-          thrusterLifetimes[i] += delta * 2.8;
+          thrusterLifetimes[i] += delta * 3.5;
           if (thrusterLifetimes[i] > 1.0) {
             thrusterLifetimes[i] = 0;
-            positions[idx] = (Math.random() - 0.5) * 0.35;
-            positions[idx + 1] = -0.3 + (Math.random() - 0.5) * 0.15;
-            positions[idx + 2] = -0.6;
+            const isLeft = (i % 2 === 0);
+            positions[idx] = (isLeft ? -0.16 : 0.16) + (Math.random() - 0.5) * 0.08;
+            positions[idx + 1] = 0.02 + (Math.random() - 0.5) * 0.08;
+            positions[idx + 2] = -0.28;
           } else {
-            positions[idx + 2] -= delta * 3.5;
-            positions[idx + 1] -= delta * 0.8;
-            positions[idx] += (Math.random() - 0.5) * 0.05;
+            positions[idx + 2] -= delta * 4.5;
+            positions[idx + 1] -= delta * 0.6;
+            positions[idx] += (Math.random() - 0.5) * 0.04;
           }
         }
         thrusterGeo.attributes.position.needsUpdate = true;
-        thrusterMaterial.opacity = actionState.thrusterPower * 0.9;
+        thrusterMaterial.opacity = actionState.thrusterPower * 0.95;
 
         if (actionState.thrusterPower <= 0.01) {
           actionState.type = 'float';
@@ -501,8 +988,9 @@ export default function LusionAstronaut3D({
           thrusterMaterial.opacity = 0;
           astronautGroup.position.z = 0;
         }
+
       } else if (actionState.type === 'shatter') {
-        actionState.timer += delta * 1.2;
+        actionState.timer += delta * 1.1;
         const cycle = actionState.timer;
         let progress = 0;
         if (cycle < 1.0) {
@@ -522,18 +1010,25 @@ export default function LusionAstronaut3D({
             mesh.material.opacity = suitAlpha;
           }
         });
+        facePortalGroup.visible = progress < 0.3;
 
-        shatterMaterial.opacity = Math.min(progress * 1.6, 0.95);
+        assembleMaterial.opacity = Math.min(progress * 1.6, 0.95);
 
-        const curPos = shatterGeo.attributes.position.array;
-        for (let i = 0; i < shatterCount; i++) {
+        const curPos = assembleGeo.attributes.position.array;
+        for (let i = 0; i < assembleCount; i++) {
           const idx = i * 3;
-          curPos[idx] = shatterOriginPos[idx] + shatterVelocities[idx] * progress;
-          curPos[idx + 1] = shatterOriginPos[idx + 1] + shatterVelocities[idx + 1] * progress;
-          curPos[idx + 2] = shatterOriginPos[idx + 2] + shatterVelocities[idx + 2] * progress;
+          curPos[idx] = THREE.MathUtils.lerp(assembleTargetPos[idx], assembleShatterPos[idx], progress);
+          curPos[idx + 1] = THREE.MathUtils.lerp(assembleTargetPos[idx + 1], assembleShatterPos[idx + 1], progress);
+          curPos[idx + 2] = THREE.MathUtils.lerp(assembleTargetPos[idx + 2], assembleShatterPos[idx + 2], progress);
         }
-        shatterGeo.attributes.position.needsUpdate = true;
+        assembleGeo.attributes.position.needsUpdate = true;
+
       } else {
+        // --- Float / Interactive State ---
+        facePortalGroup.visible = true;
+        astronautGroup.position.y = floatOffset;
+        astronautGroup.position.x = mouse.x * 0.22;
+
         astronautGroup.rotation.y = THREE.MathUtils.lerp(
           astronautGroup.rotation.y,
           mouse.x * 0.5 + yawOffset + drag.rotY,
@@ -555,23 +1050,51 @@ export default function LusionAstronaut3D({
             mesh.material.opacity = 1.0;
           }
         });
-        shatterMaterial.opacity = 0;
+        assembleMaterial.opacity = 0;
+        thrusterMaterial.opacity = 0;
       }
 
       starField.rotation.y = elapsed * 0.015;
       starField.rotation.x = elapsed * 0.008;
 
       telemetryTimer += delta;
-      if (telemetryTimer > 0.15) {
+      if (telemetryTimer > 0.12) {
         telemetryTimer = 0;
         const pitchDeg = (astronautGroup.rotation.x * (180 / Math.PI)).toFixed(1);
         const yawDeg = (astronautGroup.rotation.y * (180 / Math.PI)).toFixed(1);
+
+        let currentStatus = 'SYSTEMS NOMINAL';
+        let currentThrust = 'STANDBY';
+
+        if (actionState.type === 'sequence') {
+          if (actionState.timer < 2.4) {
+            const pct = Math.min(100, Math.round((actionState.timer / 2.2) * 100));
+            currentStatus = `PARTICLE ASSEMBLY [${pct}%]`;
+            currentThrust = 'RECONSTRUCTING';
+          } else if (actionState.timer < 3.8) {
+            currentStatus = '360° ORBITAL ROLL';
+            currentThrust = 'GYRO ROLL';
+          } else if (actionState.timer < 5.2) {
+            currentStatus = 'HYPERDRIVE THRUST';
+            currentThrust = 'BURST 100%';
+          }
+        } else if (actionState.type === 'thruster') {
+          currentStatus = 'PROPULSION ENGAGED';
+          currentThrust = 'BURST 100%';
+        } else if (actionState.type === 'spin') {
+          currentStatus = '360° GYRO ROLL';
+          currentThrust = 'GYRO ACTIVE';
+        } else if (actionState.type === 'shatter') {
+          currentStatus = 'SHATTER DISSOLVE';
+          currentThrust = 'DISPERSED';
+        }
+
         setTelemetry({
           pitch: `${pitchDeg}°`,
           yaw: `${yawDeg}°`,
           velocity: `${(0.04 + Math.abs(mouse.x) * 0.12).toFixed(2)} m/s`,
-          thruster: actionState.type === 'thruster' ? 'BURST 100%' : 'STANDBY',
-          status: actionState.type === 'shatter' ? 'SHATTER DISSOLVE' : 'SYSTEMS NOMINAL'
+          thruster: currentThrust,
+          status: currentStatus
         });
       }
 
@@ -596,22 +1119,31 @@ export default function LusionAstronaut3D({
       window.removeEventListener('pointermove', onPointerMove);
       container.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('pointerup', onPointerUp);
+      observer.disconnect();
 
       pmremGenerator.dispose();
       dynamicEnvTexture.dispose();
       starGeometry.dispose();
       starMaterial.dispose();
-      shatterGeo.dispose();
-      shatterMaterial.dispose();
+      assembleGeo.dispose();
+      assembleMaterial.dispose();
+      particleTexture.dispose();
+      thrusterTexture.dispose();
       thrusterGeo.dispose();
       thrusterMaterial.dispose();
+      faceGeo.dispose();
+      faceMat.dispose();
+      bezelGeo.dispose();
+      bezelMat.dispose();
+      visorGlassGeo.dispose();
+      visorGlassMat.dispose();
 
       if (renderer.domElement && renderer.domElement.parentNode) {
         renderer.domElement.parentNode.removeChild(renderer.domElement);
       }
       renderer.dispose();
     };
-  }, [playSoundEffect]);
+  }, [playSoundEffect, faceUrl]);
 
   return (
     <div
@@ -625,6 +1157,15 @@ export default function LusionAstronaut3D({
         cursor: 'grab'
       }}
     >
+      {/* Hidden File Input for User Face Photo Upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handlePhotoUpload}
+        style={{ display: 'none' }}
+      />
+
       {/* 1. Loading HUD Progress Overlay */}
       {!isLoaded && (
         <div
@@ -674,13 +1215,14 @@ export default function LusionAstronaut3D({
             top: '16px',
             left: '16px',
             zIndex: 25,
-            background: 'rgba(7, 10, 18, 0.72)',
+            background: 'rgba(7, 10, 18, 0.78)',
             backdropFilter: 'blur(16px)',
             border: '1px solid var(--border-subtle)',
             borderRadius: '10px',
             padding: '10px 14px',
             pointerEvents: 'none',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)'
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+            minWidth: '220px'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
@@ -689,8 +1231,14 @@ export default function LusionAstronaut3D({
                 width: '7px',
                 height: '7px',
                 borderRadius: '50%',
-                background: activeAction === 'shatter' ? 'var(--f1-yellow)' : 'var(--cyber-cyan)',
-                boxShadow: '0 0 8px var(--cyber-cyan)'
+                background:
+                  activeAction === 'sequence' || activeAction === 'thruster'
+                    ? 'var(--f1-yellow)'
+                    : 'var(--cyber-cyan)',
+                boxShadow:
+                  activeAction === 'sequence' || activeAction === 'thruster'
+                    ? '0 0 8px var(--f1-yellow)'
+                    : '0 0 8px var(--cyber-cyan)'
               }}
             />
             <span
@@ -725,32 +1273,38 @@ export default function LusionAstronaut3D({
               DRIFT: <span style={{ color: 'var(--cyber-cyan)', fontWeight: 600 }}>{telemetry.velocity}</span>
             </div>
             <div>
-              THRUST: <span style={{ color: activeAction === 'thruster' ? '#ffaa00' : 'var(--text-muted)', fontWeight: 600 }}>{telemetry.thruster}</span>
+              THRUST: <span style={{ color: activeAction === 'thruster' || activeAction === 'sequence' ? '#ffaa00' : 'var(--text-muted)', fontWeight: 600 }}>{telemetry.thruster}</span>
+            </div>
+            <div style={{ gridColumn: 'span 2', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '4px', marginTop: '2px' }}>
+              STATUS: <span style={{ color: 'var(--cyber-cyan)', fontWeight: 700 }}>{telemetry.status}</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* 3. Audio Toggle */}
+      {/* 3. Top-Right Controls: Upload Face */}
       <div
         style={{
           position: 'absolute',
           top: '16px',
           right: '16px',
-          zIndex: 25
+          zIndex: 25,
+          display: 'flex',
+          gap: '8px'
         }}
       >
+        {/* Upload Face Photo Button */}
         <button
-          onClick={() => setSoundEnabled(!soundEnabled)}
+          onClick={() => fileInputRef.current?.click()}
           data-cursor="CLICK"
-          title={soundEnabled ? 'Mute Deep Space Audio' : 'Unmute Deep Space Audio'}
+          title="Upload your face photo onto the 3D Astronaut"
           style={{
-            background: 'rgba(7, 10, 18, 0.72)',
+            background: 'rgba(7, 10, 18, 0.78)',
             backdropFilter: 'blur(16px)',
-            border: '1px solid var(--border-subtle)',
+            border: '1px solid rgba(0, 243, 255, 0.3)',
             borderRadius: '9999px',
             padding: '6px 12px',
-            color: soundEnabled ? 'var(--cyber-cyan)' : 'var(--text-muted)',
+            color: '#fff',
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
@@ -758,124 +1312,117 @@ export default function LusionAstronaut3D({
             fontFamily: 'var(--font-mono)',
             fontWeight: 700,
             cursor: 'pointer',
-            transition: 'all 0.2s ease'
+            transition: 'all 0.2s ease',
+            boxShadow: '0 4px 14px rgba(0, 243, 255, 0.15)'
           }}
+          onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--cyber-cyan)')}
+          onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'rgba(0, 243, 255, 0.3)')}
         >
-          {soundEnabled ? <Volume2 size={13} /> : <VolumeX size={13} />}
-          <span>{soundEnabled ? 'SFX: ON' : 'SFX: OFF'}</span>
+          <Camera size={13} style={{ color: 'var(--cyber-cyan)' }} />
+          <span>SET MY FACE</span>
         </button>
+
+        {faceUrl !== initialFaceUrl && (
+          <button
+            onClick={handleResetFace}
+            data-cursor="CLICK"
+            title="Reset face to default"
+            style={{
+              background: 'rgba(7, 10, 18, 0.78)',
+              backdropFilter: 'blur(16px)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: '9999px',
+              padding: '6px 8px',
+              color: 'var(--text-muted)',
+              display: 'flex',
+              alignItems: 'center',
+              cursor: 'pointer'
+            }}
+          >
+            <RotateCcw size={13} />
+          </button>
+        )}
       </div>
 
-      {/* 4. Action Buttons Suite */}
-      {showActionButtons && (
-        <div
+      {/* 4. Floating Minimalist Ambient Controls (Bottom Right Corner - matching Retro PC) */}
+      <div
+        style={{
+          position: 'absolute',
+          right: '20px',
+          bottom: '20px',
+          zIndex: 30,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          background: 'rgba(7, 10, 18, 0.78)',
+          backdropFilter: 'blur(16px)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: '12px',
+          padding: '6px 12px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6)'
+        }}
+      >
+        {/* Replay Sequence Button */}
+        <button
+          onClick={() => triggerActionRef.current && triggerActionRef.current('sequence')}
+          data-cursor="REPLAY"
           style={{
-            position: 'absolute',
-            bottom: '16px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 25,
+            background: 'transparent',
+            border: 'none',
+            color: 'var(--cyber-cyan)',
+            cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
-            background: 'rgba(7, 10, 18, 0.85)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: '9999px',
-            padding: '4px 8px',
-            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.65)',
-            maxWidth: '95%'
+            gap: '5px',
+            padding: '2px 6px',
+            fontSize: '0.72rem',
+            fontFamily: 'var(--font-mono)',
+            fontWeight: '700',
+            letterSpacing: '0.04em'
           }}
+          title="Replay Astronaut Sequence (Shattered Particles -> Assemble -> 360 Spin -> Thruster -> Zero-G Float)"
         >
-          <button
-            onClick={() => triggerActionRef.current && triggerActionRef.current('float')}
-            data-cursor="FLOAT"
-            style={{
-              background: activeAction === 'float' ? 'rgba(0, 243, 255, 0.15)' : 'transparent',
-              border: activeAction === 'float' ? '1px solid var(--cyber-cyan)' : '1px solid transparent',
-              color: activeAction === 'float' ? '#fff' : 'var(--text-muted)',
-              borderRadius: '9999px',
-              padding: '6px 12px',
-              fontSize: '0.68rem',
-              fontFamily: 'var(--font-mono)',
-              fontWeight: 700,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              cursor: 'pointer'
-            }}
-          >
-            <Eye size={12} style={{ color: 'var(--cyber-cyan)' }} />
-            <span>FLOAT</span>
-          </button>
+          <Play size={12} fill="var(--cyber-cyan)" /> Replay
+        </button>
 
-          <button
-            onClick={() => triggerActionRef.current && triggerActionRef.current('thruster')}
-            data-cursor="THRUST"
-            style={{
-              background: activeAction === 'thruster' ? 'rgba(255, 170, 0, 0.2)' : 'transparent',
-              border: activeAction === 'thruster' ? '1px solid #ffaa00' : '1px solid transparent',
-              color: activeAction === 'thruster' ? '#fff' : 'var(--text-muted)',
-              borderRadius: '9999px',
-              padding: '6px 12px',
-              fontSize: '0.68rem',
-              fontFamily: 'var(--font-mono)',
-              fontWeight: 700,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              cursor: 'pointer'
-            }}
-          >
-            <Flame size={12} style={{ color: '#ffaa00' }} />
-            <span>THRUSTER</span>
-          </button>
+        {/* Sound Toggle */}
+        <button
+          onClick={() => setSoundEnabled(!soundEnabled)}
+          data-cursor="CLICK"
+          style={{
+            background: 'transparent',
+            border: 'none',
+            borderLeft: '1px solid var(--border-subtle)',
+            paddingLeft: '8px',
+            color: soundEnabled ? 'var(--cyber-cyan)' : 'var(--text-dim)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            padding: '2px'
+          }}
+          title={soundEnabled ? 'Mute Deep Space Audio' : 'Enable Deep Space Audio'}
+        >
+          {soundEnabled ? <Volume2 size={13} /> : <VolumeX size={13} />}
+        </button>
 
-          <button
-            onClick={() => triggerActionRef.current && triggerActionRef.current('spin')}
-            data-cursor="SPIN"
-            style={{
-              background: activeAction === 'spin' ? 'rgba(0, 243, 255, 0.15)' : 'transparent',
-              border: activeAction === 'spin' ? '1px solid var(--cyber-cyan)' : '1px solid transparent',
-              color: activeAction === 'spin' ? '#fff' : 'var(--text-muted)',
-              borderRadius: '9999px',
-              padding: '6px 12px',
-              fontSize: '0.68rem',
-              fontFamily: 'var(--font-mono)',
-              fontWeight: 700,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              cursor: 'pointer'
-            }}
-          >
-            <RefreshCw size={12} style={{ color: 'var(--cyber-cyan)' }} />
-            <span>SPIN</span>
-          </button>
-
-          <button
-            onClick={() => triggerActionRef.current && triggerActionRef.current('shatter')}
-            data-cursor="SHATTER"
-            style={{
-              background: activeAction === 'shatter' ? 'rgba(0, 243, 255, 0.25)' : 'transparent',
-              border: activeAction === 'shatter' ? '1px solid var(--cyber-cyan)' : '1px solid transparent',
-              color: activeAction === 'shatter' ? '#fff' : 'var(--text-muted)',
-              borderRadius: '9999px',
-              padding: '6px 12px',
-              fontSize: '0.68rem',
-              fontFamily: 'var(--font-mono)',
-              fontWeight: 700,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              cursor: 'pointer'
-            }}
-          >
-            <Sparkles size={12} style={{ color: 'var(--cyber-cyan)' }} />
-            <span>SHATTER</span>
-          </button>
-        </div>
-      )}
+        {/* Recenter 3D Orbit View */}
+        <button
+          onClick={() => recenterRef.current && recenterRef.current()}
+          data-cursor="CLICK"
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: 'var(--text-dim)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            padding: '2px'
+          }}
+          title="Reset Orbit View"
+        >
+          <RefreshCw size={12} />
+        </button>
+      </div>
     </div>
   );
 }
