@@ -1,29 +1,20 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { Volume2, VolumeX, Play, RefreshCw, Camera, RotateCcw } from 'lucide-react';
+import { Volume2, VolumeX, Play, RefreshCw } from 'lucide-react';
 
 /**
  * LusionAstronaut3D Component - Authentic Lusion.co Interactive 3D Astronaut Engine
- * With Custom Astronaut Face Integration & Cinematic Particle Assembly Sequence
- *
- * Cinematic Sequence:
- * 1. Starts fully made up of shattered particles dispersed in 3D deep space
- * 2. Particles magnetically vortex & assemble into the exact 3D astronaut form
- * 3. Astronaut executes a dynamic 360° orbital roll with banking roll
- * 4. Twin backpack plasma thrusters erupt with forward surge & exhaust
- * 5. Smoothly settles into weightless zero-gravity floating with interactive orbit tracking
+ * With Cinematic Deep Space Particle Assembly Sequence & 360 Orbit Simulation
  */
 export default function LusionAstronaut3D({
   isFullScreen = false,
   showTelemetryOverlay = true,
   showActionButtons = true,
   height = '560px',
-  className = '',
-  initialFaceUrl = '/profile.png'
+  className = ''
 }) {
   const mountRef = useRef(null);
-  const fileInputRef = useRef(null);
   const recenterRef = useRef(null);
 
   // Component UI States
@@ -31,9 +22,6 @@ export default function LusionAstronaut3D({
   const [isLoaded, setIsLoaded] = useState(false);
   const [activeAction, setActiveAction] = useState('sequence'); // 'sequence' | 'float' | 'thruster' | 'spin' | 'shatter'
   const [soundEnabled, setSoundEnabled] = useState(false);
-  const [faceUrl, setFaceUrl] = useState(() => {
-    return localStorage.getItem('grayviper_face_photo') || initialFaceUrl;
-  });
   const [telemetry, setTelemetry] = useState({
     pitch: '0.0°',
     yaw: '0.0°',
@@ -136,39 +124,8 @@ export default function LusionAstronaut3D({
     }
   }, [soundEnabled]);
 
-  // Handle Photo Upload
-  const handlePhotoUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const resultUrl = event.target.result;
-        setFaceUrl(resultUrl);
-        try {
-          localStorage.setItem('grayviper_face_photo', resultUrl);
-        } catch {
-          // Quota fallback
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleResetFace = (e) => {
-    e.stopPropagation();
-    localStorage.removeItem('grayviper_face_photo');
-    setFaceUrl(initialFaceUrl);
-  };
-
   // Action Triggers exposed to UI
   const triggerActionRef = useRef(null);
-  const updateFaceTextureRef = useRef(null);
-
-  useEffect(() => {
-    if (updateFaceTextureRef.current) {
-      updateFaceTextureRef.current(faceUrl);
-    }
-  }, [faceUrl]);
 
   useEffect(() => {
     const container = mountRef.current;
@@ -456,84 +413,6 @@ export default function LusionAstronaut3D({
     let mixer = null;
     const suitMeshes = [];
 
-    // Face Texture Loader & Material
-    const textureLoader = new THREE.TextureLoader();
-
-    const faceGeo = new THREE.CircleGeometry(0.22, 48);
-    const faceMat = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      side: THREE.DoubleSide,
-      transparent: true,
-      depthWrite: true
-    });
-    const faceMesh = new THREE.Mesh(faceGeo, faceMat);
-
-    // Helmet Bezel Ring surrounding the face
-    const bezelGeo = new THREE.RingGeometry(0.21, 0.25, 48);
-    const bezelMat = new THREE.MeshStandardMaterial({
-      color: 0x00f3ff,
-      emissive: 0x0088aa,
-      emissiveIntensity: 0.8,
-      metalness: 0.9,
-      roughness: 0.2
-    });
-    const bezelMesh = new THREE.Mesh(bezelGeo, bezelMat);
-    bezelMesh.position.z = 0.005;
-
-    // Curved outer tinted visor glass
-    const visorGlassGeo = new THREE.SphereGeometry(0.255, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.45);
-    const visorGlassMat = new THREE.MeshPhysicalMaterial({
-      color: 0x112233,
-      transparent: true,
-      opacity: 0.25,
-      roughness: 0.05,
-      metalness: 0.1,
-      clearcoat: 1.0,
-      clearcoatRoughness: 0.05,
-      transmission: 0.75,
-      reflectivity: 1.0,
-      envMap: dynamicEnvTexture,
-      envMapIntensity: 2.5
-    });
-    const visorGlassMesh = new THREE.Mesh(visorGlassGeo, visorGlassMat);
-    visorGlassMesh.position.set(0, 0, 0.02);
-    visorGlassMesh.rotation.x = Math.PI / 2;
-
-    // Internal Helmet Warm/Cyan Illumination
-    const helmetFaceLight = new THREE.PointLight(0xffeedd, 1.8, 1.2);
-    helmetFaceLight.position.set(0, 0.05, 0.25);
-
-    // Group for the entire Face Portal
-    const facePortalGroup = new THREE.Group();
-    facePortalGroup.add(faceMesh);
-    facePortalGroup.add(bezelMesh);
-    facePortalGroup.add(visorGlassMesh);
-    facePortalGroup.add(helmetFaceLight);
-    facePortalGroup.visible = false;
-
-    // Apply face texture update
-    const loadFaceTexture = (url) => {
-      textureLoader.load(
-        url,
-        (tex) => {
-          tex.colorSpace = THREE.SRGBColorSpace;
-          tex.wrapS = THREE.ClampToEdgeWrapping;
-          tex.wrapT = THREE.ClampToEdgeWrapping;
-          tex.generateMipmaps = true;
-          tex.minFilter = THREE.LinearMipmapLinearFilter;
-          faceMat.map = tex;
-          faceMat.needsUpdate = true;
-        },
-        undefined,
-        (err) => {
-          console.warn('Could not load face texture:', err);
-        }
-      );
-    };
-
-    updateFaceTextureRef.current = loadFaceTexture;
-    loadFaceTexture(faceUrl);
-
     // Viewport Intersection Observer: Trigger sequence naturally when user scrolls to astronaut
     let hasPlayedInView = false;
     let isModelReady = false;
@@ -588,11 +467,6 @@ export default function LusionAstronaut3D({
             }
           }
         });
-
-        // Exact Centroid Position of Helmet Visor in Astronaut Model Space
-        facePortalGroup.position.set(0, 1.63, 0.32);
-        facePortalGroup.rotation.x = THREE.MathUtils.degToRad(8);
-        astronautModel.add(facePortalGroup);
 
         if (gltf.animations && gltf.animations.length > 0) {
           mixer = new THREE.AnimationMixer(astronautModel);
@@ -661,7 +535,6 @@ export default function LusionAstronaut3D({
             mesh.material.opacity = 0;
           }
         });
-        facePortalGroup.visible = false;
 
         astronautGroup.add(astronautModel);
         setIsLoaded(true);
@@ -773,7 +646,6 @@ export default function LusionAstronaut3D({
             m.material.opacity = 0;
           }
         });
-        facePortalGroup.visible = false;
         astronautGroup.position.z = 0;
       } else if (type === 'thruster') {
         actionState.thrusterPower = 1.0;
@@ -788,7 +660,6 @@ export default function LusionAstronaut3D({
         suitMeshes.forEach((m) => {
           if (m.material) m.material.opacity = 1.0;
         });
-        facePortalGroup.visible = true;
         assembleMaterial.opacity = 0;
         thrusterMaterial.opacity = 0;
         astronautGroup.position.z = 0;
@@ -855,7 +726,6 @@ export default function LusionAstronaut3D({
 
           if (t < 1.3) {
             suitMeshes.forEach((m) => { if (m.material) m.material.opacity = 0; });
-            facePortalGroup.visible = false;
           } else {
             const meshAlpha = THREE.MathUtils.clamp((t - 1.3) / 0.9, 0, 1.0);
             suitMeshes.forEach((m) => {
@@ -864,7 +734,6 @@ export default function LusionAstronaut3D({
                 m.material.opacity = meshAlpha;
               }
             });
-            facePortalGroup.visible = t > 1.6;
           }
 
           astronautGroup.position.y = floatOffset;
@@ -882,7 +751,6 @@ export default function LusionAstronaut3D({
 
           assembleMaterial.opacity = 0;
           suitMeshes.forEach((m) => { if (m.material) m.material.opacity = 1.0; });
-          facePortalGroup.visible = true;
 
           const spinProgress = (t - 2.4) / 1.4;
           const smooth = spinProgress * spinProgress * (3 - 2 * spinProgress);
@@ -941,7 +809,6 @@ export default function LusionAstronaut3D({
           thrusterMaterial.opacity = 0;
           astronautGroup.position.z = 0;
           suitMeshes.forEach((m) => { if (m.material) m.material.opacity = 1.0; });
-          facePortalGroup.visible = true;
         }
 
       } else if (actionState.type === 'spin') {
@@ -1010,7 +877,6 @@ export default function LusionAstronaut3D({
             mesh.material.opacity = suitAlpha;
           }
         });
-        facePortalGroup.visible = progress < 0.3;
 
         assembleMaterial.opacity = Math.min(progress * 1.6, 0.95);
 
@@ -1025,7 +891,6 @@ export default function LusionAstronaut3D({
 
       } else {
         // --- Float / Interactive State ---
-        facePortalGroup.visible = true;
         astronautGroup.position.y = floatOffset;
         astronautGroup.position.x = mouse.x * 0.22;
 
@@ -1131,19 +996,13 @@ export default function LusionAstronaut3D({
       thrusterTexture.dispose();
       thrusterGeo.dispose();
       thrusterMaterial.dispose();
-      faceGeo.dispose();
-      faceMat.dispose();
-      bezelGeo.dispose();
-      bezelMat.dispose();
-      visorGlassGeo.dispose();
-      visorGlassMat.dispose();
 
       if (renderer.domElement && renderer.domElement.parentNode) {
         renderer.domElement.parentNode.removeChild(renderer.domElement);
       }
       renderer.dispose();
     };
-  }, [playSoundEffect, faceUrl]);
+  }, [playSoundEffect]);
 
   return (
     <div
@@ -1157,15 +1016,6 @@ export default function LusionAstronaut3D({
         cursor: 'grab'
       }}
     >
-      {/* Hidden File Input for User Face Photo Upload */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handlePhotoUpload}
-        style={{ display: 'none' }}
-      />
-
       {/* 1. Loading HUD Progress Overlay */}
       {!isLoaded && (
         <div
@@ -1282,69 +1132,7 @@ export default function LusionAstronaut3D({
         </div>
       )}
 
-      {/* 3. Top-Right Controls: Upload Face */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '16px',
-          right: '16px',
-          zIndex: 25,
-          display: 'flex',
-          gap: '8px'
-        }}
-      >
-        {/* Upload Face Photo Button */}
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          data-cursor="CLICK"
-          title="Upload your face photo onto the 3D Astronaut"
-          style={{
-            background: 'rgba(7, 10, 18, 0.78)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(0, 243, 255, 0.3)',
-            borderRadius: '9999px',
-            padding: '6px 12px',
-            color: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            fontSize: '0.68rem',
-            fontFamily: 'var(--font-mono)',
-            fontWeight: 700,
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            boxShadow: '0 4px 14px rgba(0, 243, 255, 0.15)'
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--cyber-cyan)')}
-          onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'rgba(0, 243, 255, 0.3)')}
-        >
-          <Camera size={13} style={{ color: 'var(--cyber-cyan)' }} />
-          <span>SET MY FACE</span>
-        </button>
-
-        {faceUrl !== initialFaceUrl && (
-          <button
-            onClick={handleResetFace}
-            data-cursor="CLICK"
-            title="Reset face to default"
-            style={{
-              background: 'rgba(7, 10, 18, 0.78)',
-              backdropFilter: 'blur(16px)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: '9999px',
-              padding: '6px 8px',
-              color: 'var(--text-muted)',
-              display: 'flex',
-              alignItems: 'center',
-              cursor: 'pointer'
-            }}
-          >
-            <RotateCcw size={13} />
-          </button>
-        )}
-      </div>
-
-      {/* 4. Floating Minimalist Ambient Controls (Bottom Right Corner - matching Retro PC) */}
+      {/* Minimalist Ambient Controls (Bottom Right Corner) */}
       <div
         style={{
           position: 'absolute',

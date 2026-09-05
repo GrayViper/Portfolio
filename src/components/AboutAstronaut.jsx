@@ -131,21 +131,22 @@ export default function AboutAstronaut() {
                 border: '1px solid var(--border-subtle)'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px' }}>
                 <div
                   style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '10px',
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '12px',
                     background: 'rgba(0, 243, 255, 0.1)',
                     border: '1px solid rgba(0, 243, 255, 0.25)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: 'var(--cyber-cyan)'
+                    color: 'var(--cyber-cyan)',
+                    boxShadow: '0 0 16px rgba(0, 243, 255, 0.15)'
                   }}
                 >
-                  <Cpu size={20} />
+                  <Cpu size={22} />
                 </div>
                 <div>
                   <h3 style={{ fontSize: '1.35rem', fontWeight: '800', color: '#fff', margin: 0 }}>
