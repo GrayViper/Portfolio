@@ -1,5 +1,6 @@
-import React from 'react';
-import { Github, ExternalLink, CheckCircle, Activity, Layers, Server, ShieldCheck, Terminal as TerminalIcon } from 'lucide-react';
+import React, { useState } from 'react';
+import { Github, ExternalLink, CheckCircle, Activity, Layers, Server, ShieldCheck, Terminal as TerminalIcon, Film, Play } from 'lucide-react';
+import ProjectDemoPlayer from './ProjectDemoPlayer';
 
 export default function Projects() {
   const projects = [
@@ -19,14 +20,22 @@ export default function Projects() {
         'Multi-stage Docker deployment pipeline with Render backend & Vercel frontend'
       ],
       githubUrl: 'https://github.com/GrayViper/Carrier_Genie',
-      demoUrl: null
+      demoUrl: 'https://carrier-genie.vercel.app',
+      demoWebp: '/demos/career_genie_30s.webp',
+      demoFile: 'career_genie_walkthrough_30s.mp4',
+      chapters: [
+        { time: 0, label: 'Hero & AI Resume Match', desc: 'Context-aware resume analysis with 98% match precision and ATS optimization.' },
+        { time: 8, label: 'Automated Job Feed', desc: 'Real-time aggregated tech jobs, internships & direct application links.' },
+        { time: 16, label: 'Scholarship Intelligence', desc: 'Automated discovery for merit-based fellowships and financial awards.' },
+        { time: 24, label: 'Living Profile & Tracker', desc: 'Dynamic profile syncing live with FastAPI and MongoDB Atlas.' }
+      ]
     },
     {
       id: 'hi-links',
       title: 'hi_links',
       subtitle: 'Scalable Full-Stack Link Management System',
       date: 'May 2026',
-      status: 'Live on Vercel',
+      status: 'Repository & Docs',
       statusColor: '#00f2fe',
       pipeline: 'Next.js SSR · Neon Postgres · Drizzle',
       summary: 'High-performance scalable web application built with Next.js, TypeScript, Drizzle ORM, and Neon PostgreSQL for structured link management, analytics, and instant sharing.',
@@ -37,25 +46,41 @@ export default function Projects() {
         'Automated Vercel CI/CD deployment on every GitHub repository push'
       ],
       githubUrl: 'https://github.com/GrayViper/hi_links',
-      demoUrl: null
+      demoUrl: null,
+      demoWebp: '/demos/hi_links_30s.webp',
+      demoFile: 'hi_links_management_demo_30s.mp4',
+      chapters: [
+        { time: 0, label: 'SaaS Link Management Console', desc: 'Next.js SSR powered link shortener with custom slug creation and alias routing.' },
+        { time: 9, label: 'Dynamic QR Code Engine', desc: 'Automated vector SVG & PNG QR code generator with brand styling.' },
+        { time: 17, label: 'Real-time Click Telemetry', desc: 'Global geo click heatmaps, device breakdowns & Drizzle ORM analytics.' },
+        { time: 24, label: 'Neon Postgres & Edge Caching', desc: 'Serverless PostgreSQL pipeline achieving 99.4% Vercel Edge cache hit rate.' }
+      ]
     },
     {
       id: 'cura-ai-health',
       title: 'Cura-AI-Health',
       subtitle: 'AI-Powered Health Assistant & Diagnostic System',
       date: 'August 2026',
-      status: 'Deployed & Live',
+      status: 'Live on GitHub Pages',
       statusColor: '#ff2a5f',
       pipeline: 'Gemini 1.5 API · Flask · Chart.js',
       summary: 'Full-stack AI health assistant application using Python Flask, SQLite, and Google Gemini API — providing real-time symptom analysis, interactive nutrition planning, and mental wellness tracking.',
-      tags: ['Python', 'Flask', 'Gemini API', 'SQLite', 'Chart.js', 'Bootstrap', 'Vercel'],
+      tags: ['Python', 'Flask', 'Gemini API', 'SQLite', 'Chart.js', 'Bootstrap', 'GitHub Pages'],
       highlights: [
         'Context-aware symptom analysis & personalized diet generation via Gemini API',
         'Crisis keyword detection, automated health risk alerts & Chart.js dashboards',
         'Role-based authentication, admin dashboard, guest mode & session storage'
       ],
       githubUrl: 'https://github.com/GrayViper/cura-ai-health',
-      demoUrl: 'https://cura-ai-health.vercel.app'
+      demoUrl: 'https://grayviper.github.io/cura-ai-health/',
+      demoWebp: '/demos/cura_ai_30s.webp',
+      demoFile: 'cura_ai_clinical_demo_30s.mp4',
+      chapters: [
+        { time: 0, label: 'Clinical Diagnostic Overview', desc: 'Instant patient triage, vitals dashboard, and real-time medical alert indicators.' },
+        { time: 8, label: 'Report OCR & PDF Extraction', desc: 'Automated extraction of lab results, CBC counts, and metabolic panel values.' },
+        { time: 16, label: 'Gemini 1.5 Symptom Engine', desc: 'Differential diagnosis powered by multimodal medical AI prompting.' },
+        { time: 24, label: 'Interactive Telemetry & Chat', desc: 'Dynamic Chart.js biomarker trends and empathetic AI wellness companion.' }
+      ]
     }
   ];
 
@@ -149,7 +174,7 @@ export default function Projects() {
               </div>
 
               {/* Tech Tags */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '22px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
                 {project.tags.map((t, idx) => (
                   <span key={idx} style={{
                     fontSize: '0.72rem', fontFamily: 'var(--font-mono)',
@@ -162,30 +187,19 @@ export default function Projects() {
                 ))}
               </div>
 
-              {/* Action Buttons */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)' }}>
-                <a
-                  href={project.githubUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  data-cursor="CODE"
-                  className="btn-primary"
-                  style={{ padding: '8px 16px', fontSize: '0.82rem', flex: 1, justifyContent: 'center' }}
-                >
-                  <Github size={15} /> GitHub Code
-                </a>
-                {project.demoUrl && (
-                  <a
-                    href={project.demoUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    data-cursor="DEMO"
-                    className="btn-cyan"
-                    style={{ padding: '8px 16px', fontSize: '0.82rem', flex: 1, justifyContent: 'center' }}
-                  >
-                    <ExternalLink size={15} /> Live Demo
-                  </a>
-                )}
+              {/* 30-Second Live Demo Video Walkthrough */}
+              <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', fontWeight: '800', color: '#fff', letterSpacing: '0.02em' }}>
+                    <Film size={14} color={project.statusColor} />
+                    <span>30s Speedrun Demo Walkthrough</span>
+                  </div>
+                  <span style={{ fontSize: '0.68rem', fontFamily: 'var(--font-mono)', color: project.statusColor, background: `${project.statusColor}18`, padding: '2px 8px', borderRadius: '6px', fontWeight: '700' }}>
+                    0:30 Preview
+                  </span>
+                </div>
+
+                <ProjectDemoPlayer project={project} brandColor={project.statusColor} />
               </div>
 
             </div>
